@@ -9,6 +9,7 @@ import Image from '@/components/Image'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import ScrollTopAndComment from '@/components/ScrollTopAndComment'
+import SocialIcon from '@/components/social-icons'
 
 const editUrl = (path) => `${siteMetadata.siteRepo}/blob/main/data/${path}`
 const discussUrl = (path) =>
@@ -23,13 +24,12 @@ const postDateTemplate: Intl.DateTimeFormatOptions = {
 
 interface LayoutProps {
   content: CoreContent<Blog>
-  authorDetails: CoreContent<Authors>[]
   next?: { path: string; title: string }
   prev?: { path: string; title: string }
   children: ReactNode
 }
 
-export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
+export default function PostLayout({ content, next, prev, children }: LayoutProps) {
   const { filePath, path, slug, date, title, tags } = content
   const basePath = path.split('/')[0]
 
@@ -60,36 +60,34 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               <dt className="sr-only">Authors</dt>
               <dd>
                 <ul className="flex flex-wrap justify-center gap-4 sm:space-x-12 xl:block xl:space-x-0 xl:space-y-8">
-                  {authorDetails.map((author) => (
-                    <li className="flex items-center space-x-2" key={author.name}>
-                      {author.avatar && (
-                        <Image
-                          src={author.avatar}
-                          width={38}
-                          height={38}
-                          alt="avatar"
-                          className="h-10 w-10 rounded-full"
-                        />
-                      )}
+                  <li className="flex items-center space-x-2" key={siteMetadata.author}>
+                    {siteMetadata.avatar && (
+                      <Image
+                        src={siteMetadata.avatar}
+                        width={38}
+                        height={38}
+                        alt="avatar"
+                        className="h-10 w-10 rounded-full"
+                      />
+                    )}
+                    <div className="flex flex-col gap-2">
                       <dl className="whitespace-nowrap text-sm font-medium leading-5">
                         <dt className="sr-only">Name</dt>
-                        <dd className="text-gray-900 dark:text-gray-100">{author.name}</dd>
-                        <dt className="sr-only">Twitter</dt>
-                        <dd>
-                          {author.twitter && (
-                            <Link
-                              href={author.twitter}
-                              className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-                            >
-                              {author.twitter
-                                .replace('https://twitter.com/', '@')
-                                .replace('https://x.com/', '@')}
-                            </Link>
-                          )}
-                        </dd>
+                        <dd className="text-gray-900 dark:text-gray-100">{siteMetadata.author}</dd>
                       </dl>
-                    </li>
-                  ))}
+                      <div className="flex space-x-2">
+                        <SocialIcon kind="mail" href={`mailto:${siteMetadata.email}`} size={5} />
+                        <SocialIcon kind="github" href={siteMetadata.github} size={5} />
+                        <SocialIcon kind="facebook" href={siteMetadata.facebook} size={5} />
+                        <SocialIcon kind="youtube" href={siteMetadata.youtube} size={5} />
+                        <SocialIcon kind="linkedin" href={siteMetadata.linkedin} size={5} />
+                        <SocialIcon kind="twitter" href={siteMetadata.twitter} size={5} />
+                        <SocialIcon kind="x" href={siteMetadata.x} size={5} />
+                        <SocialIcon kind="instagram" href={siteMetadata.instagram} size={5} />
+                        <SocialIcon kind="threads" href={siteMetadata.threads} size={5} />
+                      </div>
+                    </div>
+                  </li>
                 </ul>
               </dd>
             </dl>

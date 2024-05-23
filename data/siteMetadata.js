@@ -2,6 +2,7 @@
 const siteMetadata = {
   title: 'Kamil Owczarek Blog',
   author: 'Kamil Owczarek',
+  avatar: '/static/images/avatar.png',
   headerTitle: 'Kamil Owczarek Blog',
   description:
     'Welcome to my blog - Thoughts from a wandering mind. I am the co-founder of Cylynx, a data scientist by profession and economist by training. In my free time, I like developing side projects and blogging about them. Have a good read!',
@@ -18,9 +19,9 @@ const siteMetadata = {
   // twitter: 'https://twitter.com/Twitter',
   // facebook: 'https://facebook.com',
   // youtube: 'https://youtube.com',
-  linkedin: 'https://www.linkedin.com/in/kamil-owczarek-240ab6233/',
+  linkedin: 'https://www.linkedin.com/in/kamil-owczarek-240ab6233',
   // threads: 'https://www.threads.net',
-  instagram: 'https://www.instagram.com/whoisarjen/',
+  instagram: 'https://www.instagram.com/whoisarjen',
   locale: 'en-US',
   analytics: {
     // If you want to use an analytics provider you have to add it to the
