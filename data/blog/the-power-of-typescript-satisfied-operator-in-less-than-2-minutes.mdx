@@ -1,0 +1,110 @@
+---
+title: 'The Power of Typescript Satisfied Operator in Less than 2 Minutes'
+date: 2024-05-25T16:32:14Z
+lastmod: '2024-05-25'
+tags: ['typescript', 'guide']
+draft: false
+summary: "So remember my dear dev, satisfies checks the type of an object, without having impact on the TypeScript's assumption and should be one of your main ally again typing constant objects."
+---
+
+By default, TypeScript tries to recognize the type of a variable by itself, meaning there is always some kind of type, no matter what we do.
+
+```typescript
+const user = {
+    id: 1,
+    email: 'example@mail.com',
+};
+
+typeof user = {
+    id: number // generated automatically
+    email: string // generated automatically
+};
+```
+
+Already existing keys can only be changed to a value that matches the previously declared type. In this case, `email` was a string, so we can only change it to a string.
+
+This also means the object will always maintain the same, expected shape.
+
+```typescript
+const user = {
+  id: 1, // Read as number
+  email: 'test@mail.com', // Read as string
+}
+
+user.email = 'example@email.com'
+user.email = true // ERROR: Type 'boolean' is not assignable to type 'string'
+user.notExisting = 'Test' // ERROR: Property 'notExisting' does not exist on type '{ id: number; email: string; }'
+```
+
+In real projects, relying only on TypeScript's assumption of types might not always work as we might find ourselves in situations where we don't want to allow all types.
+
+For this reason, we can use **variable annotation**.
+
+```typescript
+// variable annotation
+const user: Record<string, string | number | boolean> = {
+  id: 1,
+  email: 'test@mail.com',
+}
+```
+
+_This method works on the variable level, which means we change the way TypeScript sees the type of the variable. It no longer tries to recognize it by itself._
+
+In this case, it doesn't know we have an `email` key, it only knows there should be a string as a key and the value is a string, number, or boolean.
+
+```typescript
+const user: Record<string, string | number | boolean> = {
+  id: 1,
+  email: 'test@mail.com',
+}
+
+user.email = 'example@.com'
+user.email = true
+user.notCorrectValue = {} // ERROR: Type '{}' is not assignable to type 'string | number | boolean'
+
+console.log(user.neverExisting) // <- We can read a value that never exists
+```
+
+It works, but without TypeScript's assumption, we are able to create keys that never existed as well as read keys, which we shouldn't read as long as we follow the type.
+
+It's a behavior that has very rare use cases as **it ruins the whole idea behind type-safe** writing of code.
+
+We should tend to keep TypeScript's assumption working, but we couldn't really do anything about it... until we got the `satisfies` operator.
+
+_The `satisfies` operator, compared to previous methods, works on values, not variables, which means it checks if the current type matches (satisfies) the selected type, leaving type assumption to TypeScript._
+
+```typescript
+const user = {
+  id: 1,
+  email: 'asdsadas',
+} satisfies Record<string, string | number | boolean>
+
+user.id = 'string Id' // ERROR: Type 'string' is not assignable to type 'number'
+user.email = 'example@.com'
+user.test = true // ERROR: Property 'test' does not exist on type '{ id: number; email: string; }'
+user.email = true // ERROR: Type 'boolean' is not assignable to type 'string'
+```
+
+It allows TypeScript to assume that the declared object has the expected type and contains only `id` as `number` and `email` as a `string`.
+
+_The `satisfies` operator provides a check without having any impact on the type._
+
+```typescript
+type User = Record<string, string | number | boolean>
+
+const USER_: User = {
+  email: '1',
+} as const
+
+USER_.email // <- `email` is shown as `string | number | boolean`
+
+const USER = {
+  email: '1',
+} as const satisfies User
+
+USER.email // <- `email` is shown as `1`
+```
+
+Yet the true power of `satisfies` comes in connection with `as const`, where the lack of overwriting types allows TypeScript to show the developer exact values.
+
+So remember my dear dev, **satisfies checks the type of an object, without having impact on the TypeScript's assumption** and should be one of your main ally again typing constant objects.
