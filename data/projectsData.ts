@@ -21,8 +21,8 @@ const projectsData: Project[] = [
   {
     title: 'Game Boosting Service',
     description: `A professional game boosting service platform designed to help gamers enhance their gaming experience and achieve their in-game goals.`,
-    imgSrc: '/static/images/projects/project-boostera.jpg',
-    href: '/static/images/projects/project-boostera.jpg',
+    imgSrc: '/static/images/projects/project-boosteria.jpg',
+    href: '/static/images/projects/project-boosteria.jpg',
   },
   {
     title: 'Personal Trainer',
