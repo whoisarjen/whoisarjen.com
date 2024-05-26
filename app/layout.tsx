@@ -11,6 +11,7 @@ import siteMetadata from '@/data/siteMetadata'
 import { ThemeProviders } from './theme-providers'
 import { Metadata } from 'next'
 import Script from 'next/script'
+import { isProduction } from 'contentlayer.config'
 
 const space_grotesk = Inter({
   subsets: ['latin'],
@@ -74,7 +75,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
       <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
       <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
-      <Script src={`https://cdn-cookieyes.com/client_data/${siteMetadata.cookieyes}/script.js`} />
+      {isProduction && (
+        <Script src={`https://cdn-cookieyes.com/client_data/${siteMetadata.cookieyes}/script.js`} />
+      )}
       <body className="bg-white pl-[calc(100vw-100%)] text-black antialiased dark:bg-gray-950 dark:text-white">
         <ThemeProviders>
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
