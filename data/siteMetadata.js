@@ -3,7 +3,6 @@ const siteMetadata = {
   title: 'Kamil Owczarek Blog',
   author: 'Kamil Owczarek',
   avatar: '/static/images/avatar.png',
-  headerTitle: 'Kamil Owczarek Blog',
   description:
     'Welcome to my blog - Thoughts from a Wandering Mind. I am the CEO of Juicify, a developer by profession, and a digital nomad by lifestyle. In my free time, I enjoy creating side projects and sharing my experiences and insights here.',
   language: 'en-us',
