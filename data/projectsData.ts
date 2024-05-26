@@ -11,7 +11,7 @@ const projectsData: Project[] = [
     title: 'Juicify',
     description: `Juicify.app is not just an ordinary calorie calculator; it’s a AI trainer that teaches you how to independently achieve a body transformation without forcing yourself into restrictive diets.`,
     imgSrc: '/static/images/projects/project-juicify.png',
-    href: 'https://juicify.app/Arjen/consumed/2024-05-26',
+    href: 'https://github.com/whoisarjen/juicify-open',
     status: 'Abandoned',
   },
   {
