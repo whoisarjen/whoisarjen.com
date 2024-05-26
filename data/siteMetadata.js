@@ -5,7 +5,7 @@ const siteMetadata = {
   avatar: '/static/images/avatar.png',
   headerTitle: 'Kamil Owczarek Blog',
   description:
-    'Welcome to my blog - Thoughts from a wandering mind. I am the co-founder of Cylynx, a data scientist by profession and economist by training. In my free time, I like developing side projects and blogging about them. Have a good read!',
+    'Welcome to my blog - Thoughts from a Wandering Mind. I am the CEO of Juicify, a developer by profession, and a digital nomad by lifestyle. In my free time, I enjoy creating side projects and sharing my experiences and insights here.',
   language: 'en-us',
   theme: 'system', // system, dark or light
   siteUrl: 'https://tailwind-nextjs-starter-blog.vercel.app',

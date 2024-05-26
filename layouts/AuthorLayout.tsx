@@ -33,10 +33,15 @@ export default function AuthorLayout({ children }: Props) {
               {siteMetadata.author}
             </h3>
             <div className="flex space-x-3 pt-6">
-              <SocialIcon kind="mail" href={`mailto:${siteMetadata.email}`} />
-              <SocialIcon kind="github" href={siteMetadata.github} />
-              <SocialIcon kind="linkedin" href={siteMetadata.linkedin} />
-              <SocialIcon kind="x" href={siteMetadata.twitter} />
+              <SocialIcon kind="mail" href={`mailto:${siteMetadata.email}`} size={6} />
+              <SocialIcon kind="github" href={siteMetadata.github} size={6} />
+              <SocialIcon kind="facebook" href={siteMetadata.facebook} size={6} />
+              <SocialIcon kind="youtube" href={siteMetadata.youtube} size={6} />
+              <SocialIcon kind="linkedin" href={siteMetadata.linkedin} size={6} />
+              <SocialIcon kind="twitter" href={siteMetadata.twitter} size={6} />
+              <SocialIcon kind="x" href={siteMetadata.x} size={6} />
+              <SocialIcon kind="instagram" href={siteMetadata.instagram} size={6} />
+              <SocialIcon kind="threads" href={siteMetadata.threads} size={6} />
             </div>
           </div>
           <div className="prose max-w-none pb-8 pt-8 dark:prose-invert xl:col-span-2">
