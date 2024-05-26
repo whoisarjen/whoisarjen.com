@@ -45,6 +45,7 @@ const siteMetadata = {
       googleAnalyticsId: process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID, // e.g. G-XXXXXXX
     },
   },
+  cookieyes: process.env.NEXT_PUBLIC_COOKIEYES,
   newsletter: {
     // supports mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus
     // Please add your .env file and modify it according to your selection
