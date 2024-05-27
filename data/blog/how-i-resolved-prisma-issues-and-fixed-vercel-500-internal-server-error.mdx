@@ -1,0 +1,91 @@
+---
+title: 'How I Resolved Prisma Issues and Fixed Vercel 500 INTERNAL_SERVER_ERROR 🚀'
+date: 2024-05-27T16:32:14Z
+lastmod: '2024-05-27'
+tags: ['prisma', 'vercel']
+draft: false
+summary: 'With these adjustments, my application ran smoothly on Vercel. Finally, I could get some well-deserved rest! 🎉'
+---
+
+Yesterday, I moved an old application from my own hosting to Vercel. Although I anticipated some challenges, I encountered an issue that took longer to resolve than expected. Here’s how I navigated the problem and found a solution, so you can save time if you face the same problem! 😊
+
+### Step 1: Update Prisma and @prisma/client
+
+First, make sure you are using the latest versions of Prisma and `@prisma/client`. For my project, the latest version at the time was 5.14.0. Run the following command to update them:
+
+```bash
+npm install prisma@5.14.0 @prisma/client@5.14.0 --save-dev
+```
+
+### Step 2: Initial Setup
+
+After deploying to Vercel, I noticed the following error in Vercel's logs:
+
+```
+Prisma has detected that this project was built on Vercel, which caches dependencies.
+This leads to an outdated Prisma Client because Prisma's auto-generation isn't triggered.
+To fix this, make sure to run the `prisma generate` command during the build process.
+
+Learn how: https://pris.ly/d/vercel-build
+```
+
+### Step 3: Following the Instructions
+
+The error message was clear. To fix it, I needed to add the following to my `package.json`:
+
+```json
+"postinstall": "prisma generate"
+```
+
+### Step 4: Adding a Build Command
+
+However, this didn't completely resolve the issue. So, I updated Vercel's build command to ensure Prisma generates the client before building the application:
+
+```json
+"build": "npx prisma generate && next build"
+```
+
+### Step 5: Encountering a New Issue
+
+After this change, my application built successfully, but all API calls returned a `Vercel 500: INTERNAL_SERVER_ERROR`. This was frustrating, and there wasn’t much information available on how to fix it. 😤
+
+### Step 6: Debugging the Problem
+
+After a few hours of trial and error, I found the problem in my `schema.prisma` file. Here’s what my initial setup looked like:
+
+```prisma
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"] // <- Required on Ubuntu
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+```
+
+This setup worked fine on my server but caused issues on Vercel as I forgot it was customed specificlly for Ubuntu.
+
+### Step 7: Correcting the Schema
+
+Here are the correct settings:
+
+```prisma
+generator client {
+  provider      = "prisma-client-js"
+  previewFeatures = ["driverAdapters"] // <- neon.tech
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+}
+```
+
+### Step 8: Sleep
+
+With these adjustments, my application ran smoothly on Vercel. Finally, I could get some well-deserved rest! 🎉
+
+I hope this will save someone time! ⏳
