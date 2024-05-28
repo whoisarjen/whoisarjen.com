@@ -3,6 +3,7 @@ import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
 import NewsletterForm from 'pliny/ui/NewsletterForm'
+import Image from '@/components/Image'
 
 const MAX_DISPLAY = 5
 
@@ -12,6 +13,14 @@ export default function Home({ posts }) {
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
         <div>
           <div className="my-6 flex flex-col items-center gap-x-12 xl:mb-12 xl:flex-row">
+            <div className="relative mx-2 my-12 flex aspect-square w-[300px] items-center justify-center sm:w-[400px] md:w-[550px]">
+              <Image
+                src="/static/images/profile.jpg"
+                alt="Kamil Owczarek Blog"
+                style={{ objectFit: 'cover' }}
+                fill
+              />
+            </div>
             <div className="mr-8 pt-6">
               <h1 className="pb-6 text-3xl font-extrabold leading-9 tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14">
                 Hi, I’m {siteMetadata.author}
@@ -19,9 +28,6 @@ export default function Home({ posts }) {
               <h2 className="prose text-lg text-gray-600 dark:text-gray-400">
                 {siteMetadata.description}
               </h2>
-            </div>
-            <div className="mx-2 my-12 flex w-[300px] items-center justify-center sm:w-[400px] md:w-[550px]">
-              <NewsletterForm />
             </div>
           </div>
           <div className="space-y-2 pb-8 pt-6 md:space-y-5">
