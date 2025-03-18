@@ -1,0 +1,51 @@
+---
+title: 'Setting Up a Turborepo + Prisma + Nuxt Environment Without Import Issues on Vercel'
+date: 2025-03-18T14:00:00Z
+lastmod: '2025-03-18'
+tags: ['turborepo', 'prisma', 'nuxt', 'vercel', 'monorepo']
+draft: false
+summary: 'How I tried different approaches to set up a Turborepo + Prisma + Nuxt environment and the solution that finally worked on Vercel.'
+---
+
+Setting up a **Turborepo** + **Prisma** + **Nuxt** environment for my projects seemed like it should be a simple task, but I ran into several issues along the way—especially when trying to deploy on **Vercel**. Here’s what I tried, what went wrong, and the solution that eventually worked.
+
+### The Challenge: Shared Prisma Client Setup
+
+I started by looking for a way to set up a **shared Prisma Client** across multiple apps within a **Turborepo**. I didn’t want to replicate the same Prisma configuration in every app, so I looked for a solution where I could export the Prisma Client from a shared package, avoiding duplication.
+
+I found a helpful [**GitHub example**](https://github.com/igolka97/shared-prisma-client-example/tree/master) that suggested exporting `client/index.js` and `client/index.d.ts` and ensuring that both `prisma` and `@prisma/client` were installed in the app where the shared client would be used. This approach allowed access to PrismaClient without import issues, while maintaining correct types.
+
+### What Went Wrong
+
+Here’s where things started to break down:
+
+1. **Replicating Prisma Client Settings**: The biggest issue I ran into was that I had to replicate the same Prisma Client settings in every project. Each app had to configure its PrismaClient settings individually, even though I was trying to centralize the client. This felt unnecessary and led to repetitive configuration across my apps.
+
+2. **Vercel Deployment Issues**: Even when I had everything working locally, the **Vercel** deployment kept failing. I quickly realized that Vercel wasn’t handling the shared Prisma Client the way I expected. Even after following the instructions and setting up the build commands, Vercel couldn't generate the Prisma Client properly on the server, leading to deployment failures.
+
+### The Final Solution: Centralizing Prisma Schema
+
+After trying various approaches, I found a solution that worked but wasn’t ideal. Instead of using a shared Prisma Client, I decided to **centralize the Prisma schema** in one app. This meant holding the Prisma schema in a single app and running the Prisma generate command from there to create the Prisma Client.
+
+The solution involved:
+
+1. **Keep the Prisma schema in one app**.
+2. **Generate the Prisma Client from the central app** using the following command in the other apps:
+
+```bash
+prisma generate --schema=../app1/prisma/schema.prisma
+```
+
+This approach solved the problem without needing to duplicate the Prisma configuration across all projects and avoided the issues with Vercel not generating the client correctly. It worked fine for **Vercel** deployments, and I no longer had to worry about Prisma Client import issues.
+
+Additionally, I could reuse the exported Prisma client thru app1, which already had the declared settings, keeping my settings in one place.
+
+### Conclusion
+
+Although it wasn’t the cleanest solution, centralizing the Prisma schema and generating the client from one app finally allowed me to avoid import issues and resolve the deployment problems on Vercel as we are waiting for Prisma to fix the issue in the hopefully upcoming V7.
+
+If you're working with **Turborepo** + **Prisma** + **Nuxt** and deploying on **Vercel**, and you’re facing issues with importing the Prisma Client or having to replicate configuration across multiple projects, I recommend centralizing your Prisma schema and generating the client from one app. This approach is not perfect, but it worked for me and may save you a lot of time and headache.
+
+Hopefully, this helps someone else dealing with similar challenges! ✨
+
+---
