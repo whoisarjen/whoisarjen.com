@@ -22,13 +22,6 @@ const projectsData: Project[] = [
     status: null,
   },
   {
-    title: 'Personal Blog',
-    description: `A stylish and engaging personal blog platform designed to share insights, stories, and experiences with a wide audience.`,
-    imgSrc: '/static/images/projects/project-arjenworld.png',
-    href: 'https://arjenworld.pl',
-    status: 'Sold',
-  },
-  {
     title: 'Game Boosting Service',
     description: `A professional game boosting service platform designed to help gamers enhance their gaming experience and achieve their in-game goals.`,
     imgSrc: '/static/images/projects/project-boosteria.jpg',
