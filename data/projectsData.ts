@@ -8,11 +8,18 @@ type Project = {
 
 const projectsData: Project[] = [
   {
+    title: 'Digital Nomad',
+    description: `Helps digital nomads find their ideal destination to live and work remotely. Explore the best locations, experience new cultures, and discover your perfect spot to work from anywhere.`,
+    imgSrc: '/static/images/projects/project-nomad.png',
+    href: 'https://nomad.whoisarjen.com',
+    status: null,
+  },
+  {
     title: 'Juicify',
-    description: `Juicify.app is not just an ordinary calorie calculator; it’s a AI trainer that teaches you how to independently achieve a body transformation without forcing yourself into restrictive diets.`,
+    description: `Juicify is not just an ordinary calorie calculator; it’s a AI trainer that teaches you how to independently achieve a body transformation without forcing yourself into restrictive diets.`,
     imgSrc: '/static/images/projects/project-juicify.png',
-    href: 'https://github.com/whoisarjen/juicify-open-source',
-    status: 'Abandoned',
+    href: 'https://juicify.whoisarjen.com',
+    status: null,
   },
   {
     title: 'Personal Blog',

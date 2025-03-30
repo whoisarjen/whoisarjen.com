@@ -1,1 +1,1 @@
-{ "prisma": 2, "vercel": 2, "turborepo": 1, "nuxt": 1, "monorepo": 1, "typescript": 1, "guide": 1 }
+{ "turborepo": 1, "prisma": 2, "nuxt": 1, "vercel": 2, "monorepo": 1, "typescript": 1, "guide": 1 }
