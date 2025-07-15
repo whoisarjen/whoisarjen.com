@@ -51,7 +51,7 @@ export default function Home({ posts, projects }) {
             ))}
           </ul>
           {projects.length > MAX_DISPLAY && (
-            <div className="flex justify-end pt-4 text-base font-medium leading-6">
+            <div className="flex pt-4 text-base font-medium leading-6">
               <Link
                 href="/projects"
                 className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
