@@ -3,7 +3,7 @@ type Project = {
   description: string
   href: string
   imgSrc: string
-  status: 'Sold' | 'Abandoned' | null
+  status: 'Sold' | 'Abandoned' | 'Cooperation' | null
 }
 
 const projectsData: Project[] = [
@@ -15,11 +15,26 @@ const projectsData: Project[] = [
     status: null,
   },
   {
+    title: 'Deante',
+    description: `A collaborative project developed with Deante, a leading Polish manufacturer of kitchen and bathroom fittings.`,
+    imgSrc: '/static/images/projects/project-deante.png',
+    href: 'https://deante.pl',
+    status: 'Cooperation',
+  },
+  {
     title: 'Juicify',
     description: `Juicify is not just an ordinary calorie calculator; it’s a AI trainer that teaches you how to independently achieve a body transformation without forcing yourself into restrictive diets.`,
     imgSrc: '/static/images/projects/project-juicify.png',
     href: 'https://juicify.whoisarjen.com',
     status: null,
+  },
+  {
+    title: 'Arjenworld',
+    description:
+      'My blog documenting my life journey and being my SEO strategies experiment place, which was successfully sold.',
+    imgSrc: '/static/images/projects/project-arjenworld.png',
+    href: 'https://arjenworld.pl',
+    status: 'Sold',
   },
   {
     title: 'Game Boosting Service',
