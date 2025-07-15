@@ -4,6 +4,7 @@ type Project = {
   href: string
   imgSrc: string
   status: 'Sold' | 'Abandoned' | 'Cooperation' | null
+  isHiddenOnHomepage?: boolean
 }
 
 const projectsData: Project[] = [
@@ -35,6 +36,7 @@ const projectsData: Project[] = [
     imgSrc: '/static/images/projects/project-arjenworld.png',
     href: 'https://arjenworld.pl',
     status: 'Sold',
+    isHiddenOnHomepage: true,
   },
   {
     title: 'Game Boosting Service',

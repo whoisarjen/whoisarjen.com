@@ -6,5 +6,6 @@ import projectsData from '@/data/projectsData'
 export default async function Page() {
   const sortedPosts = sortPosts(allBlogs)
   const posts = allCoreContent(sortedPosts)
-  return <Main posts={posts} projects={projectsData} />
+  const filteredProjects = projectsData.filter((d) => !d.isHiddenOnHomepage)
+  return <Main posts={posts} projects={filteredProjects} />
 }
