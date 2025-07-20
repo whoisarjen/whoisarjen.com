@@ -1,0 +1,616 @@
+---
+title: 'Building a Search Bar That Feels Like AI: The Technical Deep Dive'
+description: 'How we built a sophisticated multi-layered search system that understands user intent, handles typos, and delivers relevant results across 9 languages using PostgreSQL, TypeScript, and smart algorithms'
+publishedAt: '2025-07-21'
+tags: ['PostgreSQL', 'Search', 'AI', 'E-commerce', 'Full-text Search', 'TypeScript', 'Performance']
+slug: 'ai-search-bar-technical-deep-dive'
+---
+
+# Building a Search Bar That Feels Like AI: The Technical Deep Dive
+
+Ever used a search that just _gets it_? You type "white bathroom sink modern" and it somehow knows you mean the same thing as "modern white sink for bathroom" or even "nowoczesna biała umywalka łazienkowa" (Polish). That's not magic – it's intelligent engineering.
+
+Today I'm pulling back the curtain on a search system I built that handles thousands of product searches daily across 9 languages. It's not using ChatGPT or Claude – it's pure PostgreSQL, TypeScript, and some seriously clever algorithms that make it feel AI-powered.
+
+## Why Most Search Engines Suck
+
+Let's be honest – most e-commerce search is terrible. You search for "bathroom sink white" and get nothing because the product is listed as "White Bathroom Basin". Make a typo? Good luck. Search in a different language? Forget about it.
+
+The problem is that traditional search engines think like computers, not humans. They match keywords exactly and call it a day. But humans are messy:
+
+- We make typos: "bathrom sink" → "bathroom sink"
+- We use different words: "basin" vs "sink" vs "washbasin"
+- We include noise: "sink for modern bathroom" vs "modern bathroom sink"
+- We search in different languages: "łazienka" (Polish) → "bathroom"
+
+Our search system solves all of this. Here's how.
+
+## The Five-Layer Architecture
+
+### Layer 1: Smart Query Preprocessing
+
+The first step is understanding what humans actually mean when they search. This starts with removing semantic noise – those little words that add no search value.
+
+```typescript
+const PREPOSITIONS: { [key in Language]: string[] } = {
+  pl: ['bez', 'dla', 'do', 'na', 'nad', 'pod', 'przy', 'w', 'z', 'za' /* ...150+ more */],
+  de: ['an', 'auf', 'bei', 'durch', 'für', 'gegen', 'in', 'mit' /* ...40+ more */],
+  en: ['about', 'above', 'across', 'after', 'against', 'along' /* ...40+ more */],
+  // ...6 more languages (Russian, Hungarian, Romanian, French, Italian, Ukrainian, Slovenian, Spanish)
+}
+
+const q = removeDiacritics(removeWordsBetweenFirstAndLast(qRaw, PREPOSITIONS[lang]))
+```
+
+**Why this works:** Users search like they speak. "sink for bathroom" and "bathroom sink" should return identical results. Our `removeWordsBetweenFirstAndLast` function keeps the first and last words (usually most important) and filters prepositions from the middle.
+
+**Diacritic normalization** handles international characters – "ñ" becomes "n", "ş" becomes "s", ensuring searches work across languages.
+
+But here's the really clever bit – **compound code generation**:
+
+```typescript
+const perfectCodes = splitQ.reduce((previous, current, index) => {
+  if (!splitQ[index + 1]) {
+    return [...previous, current]
+  }
+  return [
+    ...previous,
+    current,
+    `${current}_${splitQ[index + 1]}`, // Creates compound codes
+  ]
+}, [] as string[])
+```
+
+If someone searches "ABC DEF", this generates `["ABC", "ABC_DEF", "DEF"]`. Perfect for products with compound codes or when users search partial product codes.
+
+### Layer 2: Weighted Vector Construction
+
+Here's where it gets really interesting. Every product gets a searchable "name vector" built from multiple weighted components:
+
+```typescript
+export const buildNameVector = (
+  language: Language,
+  product: productBuildNameVectorSelect
+): string => {
+  const nameCore = addWeightToString(
+    product.nameCore?.translations?.[language] ?? '',
+    13 // Highest weight - main product name
+  )
+  const namePost = addWeightToString(
+    product.namePost?.translations?.[language] ?? '',
+    8 // Secondary name component
+  )
+  const nameFeature1 = addWeightToString(
+    product.nameFeature1?.translations?.[language] ?? '',
+    5 // Feature descriptions
+  )
+  const nameFeature2 = addWeightToString(product.nameFeature2?.translations?.[language] ?? '', 5)
+  const collection = addWeightToString(
+    product.collection?.name ?? '',
+    3 // Collection/series name
+  )
+  const tags = (product.tags ?? []).flatMap((tag) => {
+    const tags = tag.name?.[language] ?? ''
+    return tags.split(',').map((value) => addWeightToString(value, 2)) // Product tags
+  })
+  const productFinish = (product.productFinish ?? []).flatMap((finish) => {
+    const finishes = finish.translations?.[language] ?? ''
+    return finishes.split(',').map((value) => addWeightToString(value, 1)) // Lowest weight - finishes
+  })
+
+  return [nameCore, namePost, nameFeature1, nameFeature2, collection, ...tags, ...productFinish]
+    .filter((text) => !!text)
+    .map((text) => removeDiacritics(text.trim()).toUpperCase())
+    .join(' ')
+}
+```
+
+The `addWeightToString` function is genius:
+
+```typescript
+const addWeightToString = (value: string, weight: number) => {
+  if (!value) return value
+
+  return value
+    .split(' ')
+    .filter((value) => value)
+    .map((value, index) => `${weight - index > 0 ? weight - index : 1}:${value}`)
+    .join(' ')
+}
+```
+
+This creates weighted terms like `"13:MODERN 12:BATHROOM 11:SINK 8:WHITE 7:CERAMIC"`. When PostgreSQL's similarity functions compare these, words with higher weights get stronger influence.
+
+**Why this approach rocks:**
+
+- Core product names have maximum impact (weight 13)
+- Secondary features have moderate impact (weight 5-8)
+- Finishes and tags provide context (weight 1-3)
+- Each word within a field gets decreasing weight (prevents keyword stuffing)
+
+### Layer 3: Three-Tier Search Strategy
+
+The heart of the system uses a sophisticated three-tier approach:
+
+#### Tier 1: Exact Matches (Priority 2)
+
+```sql
+WHEN ean = ANY(${splitQ}) OR code = ANY(${perfectCodes}) THEN 2
+```
+
+Perfect for exact EAN codes or product codes. These get absolute priority.
+
+#### Tier 2: Partial Matches (Priority 1)
+
+```sql
+WHEN code LIKE ANY(${codes}) OR EXISTS (
+  SELECT 1 FROM public."Translation" AS nv
+  WHERE nv."id" = nameVectorId
+  AND to_tsvector('simple', nv.${langField}) @@ to_tsquery('simple', ${tsQuery})
+) THEN 1
+```
+
+This handles partial code matches and full-text search using PostgreSQL's tsvector system.
+
+The `tsQuery` preparation is beautiful:
+
+```typescript
+const tsQuery = splitQ
+  .map((q) => q.replace(/\W/g, '')) // Sanitize: remove non-word characters
+  .filter((term) => term.length > 0) // Remove empty terms
+  .map((term) => (term.length > 3 ? `${term.slice(0, term.length - 1)}:*` : `${term}:*`))
+  .join(' | ')
+```
+
+For longer words (>3 chars), it removes the last character and adds `:*` for prefix matching. This catches typos like "bathrom" matching "bathroom".
+
+#### Tier 3: Similarity Matches
+
+```sql
+WHERE h.has_exact = 0 AND h.has_partial = 0 AND (
+  (ahs.min_similarity > ${PRODUCTS_QUERY_SENSITIVITY})
+  OR (ahs.min_similarity_without_worst > ${PRODUCTS_QUERY_SENSITIVITY})
+)
+```
+
+Uses PostgreSQL's trigram similarity with a configurable threshold:
+
+```typescript
+const PRODUCTS_QUERY_SENSITIVITY = 0.35 // 35% similarity threshold
+```
+
+**The brilliance:** If exact matches exist, show only those. If partial matches exist, show only those. Only fall back to fuzzy matching when nothing else works.
+
+### Layer 4: Advanced Similarity Scoring
+
+The system includes a custom PostgreSQL function `average_highest_similarity` that's pure genius:
+
+```sql
+-- This function calculates similarity between query words and product name vectors
+-- But with a twist: it can exclude the worst-matching words from the average
+
+FOREACH query_word IN ARRAY query_words LOOP
+  max_similarity := 0;
+  -- Find the highest similarity for each query word against all product words
+  FOREACH tsvector_entry IN ARRAY tsvector_entries LOOP
+    current_similarity := similarity(query_word, tsvector_word) + tsvector_weight / 100;
+    IF current_similarity > max_similarity THEN
+      max_similarity := current_similarity;
+      max_similarity_word := tsvector_word;
+    END IF;
+  END LOOP;
+  -- Remove the matched word so it can't match again
+  tsvector_entries := array_remove(tsvector_entries, max_similarity_word);
+END LOOP;
+```
+
+**Why this matters:** If someone searches "red bathroom sink luxury", and a product matches "red", "bathroom", and "sink" well but has no "luxury" in the name, traditional scoring would be heavily penalized. This function can ignore the worst match ("luxury") and still rank the product highly.
+
+### Layer 5: Business Logic Integration
+
+The search isn't just about relevance – it integrates crucial business rules:
+
+#### Smart Stock Filtering
+
+```sql
+WHERE (isSearchBarEligibleByStock = true OR exactMatchPriority = 2)
+```
+
+Out-of-stock products don't appear UNLESS someone searches for an exact code.
+
+#### Promotion Boosting
+
+```typescript
+const PROMOTED_CODES = ['NQS_F4GM']
+
+// In the ORDER BY:
+CASE WHEN fp.code = ANY(${PROMOTED_CODES}) THEN 1 ELSE 0 END DESC,
+```
+
+Certain products get boosted for business reasons.
+
+#### Multi-Factor Ranking
+
+```sql
+ORDER BY
+  promoted_products DESC,        -- Business priority
+  avg_similarity DESC,          -- Relevance score
+  avg_similarity_without_worst DESC, -- Fallback relevance
+  categoryPriority DESC,        -- Category importance
+  plcRank DESC                  -- Product lifecycle stage
+```
+
+## The Complete Implementation
+
+Here's the full search endpoint that brings it all together:
+
+```typescript
+import { z } from 'zod'
+import { getProductsSearchSchema } from '~/schemas/search.schema'
+import { Prisma, ProductLine } from '@prisma/client'
+import { removeWordsBetweenFirstAndLast } from '~/utils/global.utils'
+import type { Language } from '~/schemas/language.schema'
+import { prepareStockToResponse } from '~/utils/product.utils'
+import { getFinishIdFromQueryParam } from '~/utils/finish.utils'
+import _ from 'lodash'
+
+const PRODUCTS_QUERY_SENSITIVITY = 0.35
+const PROMOTED_CODES = ['NQS_F4GM']
+
+type QueryResult = {
+  result: {
+    data: any[] | null
+    total_count: number
+    zones: string[] | null
+    finishes: { id: string; translations: { [key in Language]: string } }[] | null
+  }
+}[]
+
+const PREPOSITIONS: { [key in Language]: string[] } = {
+  pl: ['bez', 'dla', 'do', 'na', 'nad', 'pod' /* ...150+ more Polish prepositions */],
+  de: ['an', 'auf', 'bei', 'durch', 'für' /* ...40+ German prepositions */],
+  en: ['about', 'above', 'across', 'after' /* ...40+ English prepositions */],
+  ru: ['в', 'на', 'к', 'по', 'с' /* ...30+ Russian prepositions */],
+  hu: ['alatt', 'által', 'ellen' /* ...25+ Hungarian prepositions */],
+  ro: ['cu', 'de', 'din', 'în' /* ...30+ Romanian prepositions */],
+  fr: ['à', 'après', 'avant', 'avec' /* ...30+ French prepositions */],
+  it: ['a', 'con', 'da', 'di' /* ...25+ Italian prepositions */],
+  uk: ['в', 'на', 'до', 'з' /* ...30+ Ukrainian prepositions */],
+  sl: ['v', 'na', 'pri', 'za' /* ...30+ Slovenian prepositions */],
+  es: ['a', 'ante', 'bajo', 'con' /* ...25+ Spanish prepositions */],
+}
+
+export default defineEventHandler(async (event) => {
+  const {
+    q: qRaw = '',
+    page,
+    limit,
+    zone,
+    finish,
+  } = await getValidatedQuery(event, getProductsSearchSchema.parse)
+
+  const lang = getLocale(event)
+  const langField = Prisma.sql([`"${lang}"`])
+  const skip = (page - 1) * limit
+
+  // Smart preprocessing
+  const q = removeDiacritics(removeWordsBetweenFirstAndLast(qRaw, PREPOSITIONS[lang]))
+  const splitQ = q.split(/,\s*|\s+/)
+  const perfectCodes = splitQ.reduce((previous, current, index) => {
+    if (!splitQ[index + 1]) {
+      return [...previous, current]
+    }
+    return [...previous, current, `${current}_${splitQ[index + 1]}`]
+  }, [] as string[])
+
+  // Similarity query with typo tolerance
+  const similarityQ = q
+    .split(' ')
+    .map((term) => (term.length > 3 ? term.slice(0, term.length - 1) : term))
+    .join(' ')
+
+  // Full-text search query
+  const tsQuery = splitQ
+    .map((q) => q.replace(/\W/g, ''))
+    .filter((term) => term.length > 0)
+    .map((term) => (term.length > 3 ? `${term.slice(0, term.length - 1)}:*` : `${term}:*`))
+    .join(' | ')
+
+  const codes = perfectCodes.map((option) => `%${option}%`)
+
+  const [
+    {
+      result: { data, total_count, zones, finishes },
+    },
+  ] = await prisma.$queryRaw<QueryResult>`
+        WITH PreloadedQuery AS (
+            SELECT
+                product."id" AS id,
+                product."ean" AS ean,
+                product."code" AS code,
+                product."mainPhotoId" AS mainPhotoId,
+                product."isSearchBarEligibleByStock" AS isSearchBarEligibleByStock,
+                category."priority" AS categoryPriority,
+                product."nameVectorId" AS nameVectorId,
+                category."zone" AS categoryZone,
+                CASE
+                    WHEN product."plc" = 'Nowość' THEN 1
+                    WHEN product."plc" = 'Normalny' THEN 0.5
+                    ELSE 0
+                END AS plcRank
+            FROM public."Product" AS product
+            LEFT JOIN public."Category" AS category ON product."mainCategoryId" = category."id"
+            WHERE product."isSearchBarEligibleByData" = true
+            GROUP BY product."id", product."ean", product."code", category."priority", category."zone"
+        ),
+        FilteredQueryBeforeCheck AS (
+            SELECT *,
+                CASE
+                    WHEN ean = ANY(${splitQ}) OR code = ANY(${perfectCodes}) THEN 2 -- Exact match
+                    WHEN code LIKE ANY(${codes}) OR EXISTS (
+                        SELECT 1 FROM public."Translation" AS nv
+                        WHERE nv."id" = nameVectorId
+                        AND to_tsvector('simple', nv.${langField}) @@ to_tsquery('simple', ${tsQuery})
+                    ) THEN 1 -- Partial match
+                    ELSE 0
+                END AS exactMatchPriority
+            FROM PreloadedQuery
+        ),
+        FilteredQuery AS (
+            SELECT * FROM FilteredQueryBeforeCheck
+            WHERE (isSearchBarEligibleByStock = true OR exactMatchPriority = 2)
+        ),
+        HasExactMatch AS (
+            SELECT
+                MAX(CASE WHEN exactMatchPriority = 2 THEN 1 ELSE 0 END) AS has_exact,
+                MAX(CASE WHEN exactMatchPriority = 1 THEN 1 ELSE 0 END) AS has_partial
+            FROM FilteredQuery
+        ),
+        ExactAndPartialMatches AS (
+            SELECT fq.*, ahs.avg_similarity, ahs.avg_similarity_without_worst
+            FROM FilteredQuery fq, HasExactMatch h
+            LEFT JOIN LATERAL (
+                SELECT * FROM average_highest_similarity(
+                    (SELECT nameVector.${langField}
+                    FROM public."Translation" AS nameVector
+                    WHERE nameVector."id" = fq.nameVectorId),
+                    ${similarityQ}
+                )
+            ) AS ahs ON TRUE
+            WHERE (h.has_exact = 1 AND fq.exactMatchPriority = 2)
+                OR (h.has_exact = 0 AND h.has_partial = 1 AND fq.exactMatchPriority = 1)
+        ),
+        SimilarityMatches AS (
+            SELECT fq.*, ahs.avg_similarity, ahs.avg_similarity_without_worst
+            FROM FilteredQuery fq, HasExactMatch h
+            LEFT JOIN LATERAL (
+                SELECT * FROM average_highest_similarity(
+                    (SELECT nameVector.${langField}
+                    FROM public."Translation" AS nameVector
+                    WHERE nameVector."id" = fq.nameVectorId),
+                    ${q}
+                )
+            ) AS ahs ON TRUE
+            WHERE h.has_exact = 0 AND h.has_partial = 0 AND (
+                (ahs.min_similarity > ${PRODUCTS_QUERY_SENSITIVITY})
+                OR (ahs.min_similarity_without_worst > ${PRODUCTS_QUERY_SENSITIVITY})
+            )
+        ),
+        RankedResults AS (
+            SELECT * FROM ExactAndPartialMatches
+            UNION ALL
+            SELECT * FROM SimilarityMatches
+        ),
+        ProductsPool AS (
+            SELECT * FROM RankedResults
+            ${
+              zone
+                ? Prisma.sql`
+                WHERE categoryZone IS NOT NULL
+                AND categoryZone && ARRAY[${Prisma.join(_.castArray(zone))}]`
+                : Prisma.empty
+            }
+        ),
+        FinalProductsPool AS (
+            SELECT rp.* FROM ProductsPool rp
+            ${
+              finish
+                ? Prisma.sql`
+                WHERE EXISTS (
+                SELECT 1 FROM public."_productFinish" AS pf
+                WHERE pf."B" = rp.id
+                AND pf."A" = ANY(ARRAY[${Prisma.join(_.castArray(finish).map(getFinishIdFromQueryParam))}]::text[])
+                )`
+                : Prisma.empty
+            }
+        ),
+        DataResults AS (
+            SELECT
+                fp.id, fp.ean, fp.code, fp.avg_similarity, fp.avg_similarity_without_worst,
+                product."plc" AS plc, product."line" AS lineRaw, product."stock" AS stock,
+                product."promoGrossPrice" AS promoGrossPrice, product."grossPrice" AS grossPrice,
+                product."isPromotion" AS isPromotion, product."dimensions" AS dimensions,
+                product."plannedDeliveryDate" AS plannedDeliveryDate,
+                product."v2srcTimeStamp" AS v2srcTimeStamp,
+                translation.${langField} AS nameCore,
+                postTranslation.${langField} AS namePost,
+                feature1Translation.${langField} AS nameFeature1,
+                feature2Translation.${langField} AS nameFeature2,
+                productCollection."name" AS collectionName,
+                mainPhoto."fullpath" AS mainPhotoFullPath
+            FROM FinalProductsPool fp
+            JOIN public."Product" AS product ON product."id" = fp.id
+            LEFT JOIN public."DictionaryEntry" AS nameCoreEntry ON product."nameCoreId" = nameCoreEntry."id"
+            LEFT JOIN public."Translation" AS translation ON nameCoreEntry."translationId" = translation."id"
+            LEFT JOIN public."DictionaryEntry" AS namePostEntry ON product."namePostId" = namePostEntry."id"
+            LEFT JOIN public."Translation" AS postTranslation ON namePostEntry."translationId" = postTranslation."id"
+            LEFT JOIN public."DictionaryEntry" AS nameFeature1Entry ON product."nameFeature1Id" = nameFeature1Entry."id"
+            LEFT JOIN public."Translation" AS feature1Translation ON nameFeature1Entry."translationId" = feature1Translation."id"
+            LEFT JOIN public."DictionaryEntry" AS nameFeature2Entry ON product."nameFeature2Id" = nameFeature2Entry."id"
+            LEFT JOIN public."Translation" AS feature2Translation ON nameFeature2Entry."translationId" = feature2Translation."id"
+            LEFT JOIN public."Collection" AS productCollection ON product."collectionId" = productCollection."id"
+            LEFT JOIN public."Asset" AS mainPhoto ON fp.mainPhotoId = mainPhoto."id"
+            ORDER BY
+                CASE WHEN fp.code = ANY(${PROMOTED_CODES}) THEN 1 ELSE 0 END DESC,
+                fp.avg_similarity DESC,
+                fp.avg_similarity_without_worst DESC,
+                fp.categoryPriority DESC,
+                fp.plcRank DESC
+            OFFSET ${skip} LIMIT ${limit}
+        ),
+        Finishes AS (
+            SELECT pf."A" AS finish_id, translationProductFinish.${langField} AS translation
+            FROM public."_productFinish" AS pf
+            JOIN ProductsPool rr ON pf."B" = rr.id
+            JOIN public."DictionaryEntry" AS nameProductFinish ON nameProductFinish."id" = pf."A"
+            LEFT JOIN public."Translation" AS translationProductFinish ON nameProductFinish."translationId" = translationProductFinish."id"
+            GROUP BY pf."A", translationProductFinish.${langField}
+        ),
+        FlattenedCategoryZones AS (
+            SELECT DISTINCT unnest(categoryZone) AS category_zone FROM RankedResults
+        ),
+        UniqueCategoryZones AS (
+            SELECT json_agg(category_zone) AS category_zones FROM FlattenedCategoryZones
+        )
+        SELECT json_build_object(
+            'data', json_agg(json_build_object(
+                'id', id, 'ean', ean, 'code', code, 'plc', plc, 'lineRaw', lineRaw,
+                'stock', stock, 'plannedDeliveryDate', plannedDeliveryDate,
+                'v2srcTimeStamp', v2srcTimeStamp, 'dimensions', dimensions,
+                'grossPrice', grossPrice, 'promoGrossPrice', promoGrossPrice,
+                'isPromotion', isPromotion, 'nameCore', nameCore, 'namePost', namePost,
+                'nameFeature1', nameFeature1, 'nameFeature2', nameFeature2,
+                'collectionName', collectionName, 'mainPhotoFullPath', mainPhotoFullPath
+            )),
+            'total_count', (SELECT COUNT(*) FROM FinalProductsPool),
+            'zones', (SELECT category_zones FROM UniqueCategoryZones),
+            'finishes', (
+                SELECT json_agg(json_build_object(
+                    'id', finish_id,
+                    'translations', json_build_object(${Prisma.raw(`'${lang}'`)}, translation)
+                ))
+                FROM Finishes
+            )
+        ) AS result
+        FROM DataResults;
+    `
+
+  const pagesCount = Math.ceil(total_count / limit)
+
+  return {
+    products: z
+      .array(
+        z.object({
+          id: z.number(),
+          ean: z.string().nullable(),
+          code: z.string(),
+          plc: z.string(),
+          line: z
+            .string()
+            .transform((value) => Object.values(ProductLine).find((line) => line === value))
+            .nullable(),
+          grossPrice: z.union([z.string(), z.number()]).transform((option) => option.toString()),
+          promoGrossPrice: z
+            .union([z.string(), z.number()])
+            .transform((option) => option.toString()),
+          inStock: z.boolean(),
+          version: z.number().optional(),
+          versionDate: z.any(),
+          versionTimeStamp: z.number(),
+          dimensions: z.string().nullable().optional(),
+          isPromotion: z.boolean(),
+          nameCore: z.string().nullable(),
+          namePost: z.string().nullable(),
+          nameFeature1: z.string().nullable(),
+          nameFeature2: z.string().nullable(),
+          collectionName: z.string().nullable(),
+          mainPhotoFullPath: z.string().nullable(),
+        })
+      )
+      .parse(
+        (data ?? [])
+          .map(({ lineRaw, ...option }) => ({ ...option, line: lineRaw }))
+          .map(prepareStockToResponse)
+      ),
+    lang,
+    page,
+    limit,
+    skip,
+    pagesCount,
+    finishes,
+    zones,
+  }
+})
+```
+
+## Performance Considerations
+
+### CTEs for Complex Logic
+
+The massive Common Table Expression (CTE) query might look intimidating, but it's brilliant for performance. Each step is clearly defined and optimized by PostgreSQL's query planner.
+
+### Lateral Joins for Dynamic Similarity
+
+```sql
+LEFT JOIN LATERAL (
+    SELECT * FROM average_highest_similarity(...)
+) AS ahs ON TRUE
+```
+
+Lateral joins allow similarity calculation per row using the specific product's name vector. Much more efficient than application-side processing.
+
+## Customization Strategies
+
+### 1. Tune the Sensitivity
+
+Start with `PRODUCTS_QUERY_SENSITIVITY = 0.5` for conservative matching, or lower to 0.25 for very permissive matching. Monitor zero-result queries to find the sweet spot.
+
+### 2. Expand Preposition Lists
+
+Add industry-specific terms, brand names, or common phrases that don't add semantic value.
+
+### 3. Enhance Ranking
+
+Current ranking could include:
+
+- User's purchase history
+- Product popularity (click-through rates)
+- Seasonal relevance
+- Profit margins
+- Geographic relevance
+
+### 4. Add Semantic Understanding
+
+Consider integrating embeddings for truly semantic search using vector databases like pgvector.
+
+### 5. Learn from User Behavior
+
+Track what users click after searching. Build synonym mappings based on behavior patterns.
+
+## Why This Approach Works
+
+This isn't just a search engine – it's a **search experience**. It handles:
+
+- **Human imperfection** (typos, unnecessary words)
+- **Business requirements** (promotions, stock levels, categories)
+- **Multiple languages** (crucial for international commerce)
+- **Different search intents** (exact lookups vs. exploration)
+- **Performance at scale** (efficient PostgreSQL queries)
+
+The key insight: good search isn't about perfect matching – it's about understanding intent and providing relevant results even when input is messy.
+
+## The Results
+
+This system powers search for thousands of bathroom and kitchen products daily. Users get relevant results whether they search in Polish, German, English, or make typos. The multi-tier approach ensures exact matches get priority while still providing fallback options for exploratory searches.
+
+Building search like this requires thinking like both a developer and a user. Every preprocessing step, ranking factor, and threshold is based on real user behavior.
+
+The beauty is graceful degradation – if exact matching fails, try partial. If that fails, fall back to similarity. If searches are too broad, business logic helps narrow results.
+
+This is how you build search that doesn't just work – it **delights**. Users get what they want, even when they don't know how to ask perfectly.
+
+Want to implement something similar? Start simple with exact matching, add one layer at a time, and always monitor your search analytics. The data will tell you what to build next.
+
+---
+
+\*Building intelligent search isn't about using the latest AI models – it's about understanding your users and crafting smart algorithms that feel magical. Sometimes
