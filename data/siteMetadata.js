@@ -2,6 +2,7 @@
 const siteMetadata = {
   title: 'Kamil Owczarek Blog',
   author: 'Kamil Owczarek',
+  postsPerPage: 40,
   avatar: '/static/images/avatar.png',
   headerTitle: 'Kamil Owczarek Blog',
   description:
@@ -21,7 +22,7 @@ const siteMetadata = {
   // youtube: 'https://youtube.com',
   linkedin: 'https://www.linkedin.com/in/kamil-owczarek-240ab6233',
   // threads: 'https://www.threads.net',
-  instagram: 'https://www.instagram.com/whoisarjen',
+  // instagram: 'https://www.instagram.com/whoisarjen',
   locale: 'en-US',
   analytics: {
     // If you want to use an analytics provider you have to add it to the
