@@ -1,0 +1,73 @@
+---
+title: 'How I Inherited a $50/Day Font Awesome Problem in Nuxt 3'
+date: 2025-08-09T13:00:00Z
+lastmod: '2025-08-09'
+summary: 'I inherited a Nuxt 3 project that was costing over $50/day in Vercel bandwidth. The culprit? A single wildcard import pulling in the entire Font Awesome library. Here’s how I found and fixed it.'
+tags: ['Nuxt 3', 'Font Awesome', 'Performance', 'Vercel', 'Vue', 'Optimization', 'Bundle Size']
+---
+
+## The Mystery: Why Was My Vercel Bill Exploding?
+
+I took over a Nuxt 3 project from another developer and deployed it to production as the deadline was already there. Within days, **Vercel bandwidth costs exceeded $50/day**.
+
+The only clue? The bundle size was _massive_.
+
+After some digging, I found the root cause:  
+**Font Awesome was imported with a wildcard, pulling in every single icon in the library**.
+
+---
+
+## The Problem I Inherited
+
+The original setup looked like this:
+
+```js
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+
+library.add(fas)
+```
+
+It’s convenient — you instantly get every solid icon.
+But this also means **hundreds of unused icons** are shipped to every user, adding megabytes of unnecessary SVG data to the bundle.
+
+---
+
+## The Fix: Import Only What You Need
+
+I replaced the wildcard import with explicit imports for only the icons used in the app.
+
+```js
+import { library, config } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+// ✅ Only specific icons
+import { faHeart } from '@fortawesome/pro-light-svg-icons'
+import { faCheck } from '@fortawesome/pro-solid-svg-icons'
+
+config.autoAddCss = false
+library.add(faHeart, faCheck)
+
+export default defineNuxtPlugin((nuxtApp) => {
+  nuxtApp.vueApp.component('font-awesome-icon', FontAwesomeIcon)
+})
+```
+
+---
+
+## The Results
+
+- **Bundle size dropped dramatically**
+- **Transfer usage returned to normal**
+- Daily costs went from **\$50 → \$1**
+- Page load performance improved significantly
+
+---
+
+## Lessons Learned
+
+1. If you inherit a project, **audit third-party imports** early.
+2. **Never import entire icon packs** unless you actually need them.
+3. Use bundle analyzers (`nuxt build --analyze`) to spot bloated dependencies before they hit production.
+
+💡 A single `import *` can quietly burn through your CDN budget — especially if it’s pulling in a whole library.

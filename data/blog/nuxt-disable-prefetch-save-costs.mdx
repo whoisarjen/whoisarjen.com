@@ -1,0 +1,72 @@
+---
+title: 'How I Cut Costly Bandwidth Spikes by Disabling Nuxt Link Prefetch'
+date: 2025-08-09T18:00:00Z
+lastmod: '2025-08-09'
+draft: false
+summary: 'While optimizing a Nuxt 3 project, I discovered excessive automatic prefetching was driving up Vercel bandwidth. Disabling prefetch globally brought costs and network overhead way down.'
+tags: ['Nuxt 3', 'Performance', 'Prefetch', 'Vercel', 'Optimization', 'Vue', 'Bandwidth']
+---
+
+## The Discovery: An Unexpected Spike in Bandwidth
+
+The other day, I was optimizing a Nuxt 3 project I inherited—and noticed weird spikes in “Fast Data Transfer” on Vercel. The app wasn’t doing anything heavy, yet the network usage seemed excessive.
+
+One clue stood out: **every internal link was preloading content the moment it entered the viewport**.
+
+Turns out, Nuxt’s `nuxt-link` prefetch feature was preloading numerous chunks—turning simple page navigation into a bandwidth-hungry process :contentReference[oaicite:0]{index=0}.
+
+---
+
+## What I Found: Prefetching Isn't Free
+
+By default, Nuxt enables **smart prefetching**—that means when a `<nuxt-link>` appears on screen, it automatically fetches that page’s code. It uses `IntersectionObserver` and `requestIdleCallback`, which is clever—but in larger apps with many links, it leads to a flood of unnecessary network requests :contentReference[oaicite:1]{index=1}.
+
+This accidental behavior meant users triggered dozens of page fetches just by scrolling. All that ended up on my Vercel bill.
+
+---
+
+## The Fix: Disable Prefetch Globally
+
+I needed a quick and effective way to stop it. A look at the docs revealed we can disable prefetch across the board in `nuxt.config.ts`:
+
+```ts
+export default defineNuxtConfig({
+  experimental: {
+    defaults: {
+      nuxtLink: {
+        prefetch: false,
+      },
+    },
+  },
+})
+```
+
+Or, more simply:
+
+```js
+export default {
+  router: {
+    prefetchLinks: false,
+  },
+}
+```
+
+Both methods prevent Nuxt from injecting `<link rel="prefetch">` tags for page chunks ([Nuxt][1], [Medium][2]).
+
+---
+
+## Results: Faster, Leaner, and Cheaper
+
+- **Bandwidth usage dropped significantly**
+- **Vercel “Fast Data Transfer” costs normalized**
+- **Page performance stayed fast—without wasted fetches**
+- **More control over what actually gets prefetched**
+
+---
+
+## Lessons Learned
+
+1. Inherited defaults—especially features like smart prefetch—can stealthily drain bandwidth.
+2. Nuxt gives you control—disable prefetch globally when you value budget over ultra-aggressive navigation performance.
+3. For high-link-volume pages, disable by default and **opt-in manually** on critical links.
+4. Vercel’s cost dashboard helped me trace the issue fast—a crucial part of the optimization process.
