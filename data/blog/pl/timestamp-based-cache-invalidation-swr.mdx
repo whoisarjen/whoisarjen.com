@@ -22,7 +22,7 @@ export const cleanCachePartially = async () => {
 };
 ```
 
-**W czym problem?** Przy setkach tysięcy wpisów w cache'u czyszczenie zajmowało **5–10 sekund**. Użytkownicy klikali w dashboardzie „Wyczyść cache" i... nic. Klikali ponownie. I jeszcze raz. A cache w tym czasie wciąż czyścił się po pierwszym kliknięciu.
+**W czym problem?** Przy setkach tysięcy wpisów w cache'u czyszczenie zajmowało **5–10 sekund**. Użytkownicy klikali w dashboardzie „Wyczyść cache” i... nic. Klikali ponownie. I jeszcze raz. A cache w tym czasie wciąż czyścił się po pierwszym kliknięciu.
 
 Gorzej: czyszczenie obu cache'ów przekreślało cały sens SWR. Po inwalidacji:
 - Cache PRIMARY: **pusty**
@@ -178,7 +178,7 @@ export const cleanCacheCompletely = async () => {
 - Flaga pełnego resetu ustawiona na `3000`
 - Sprawdzenie: `1000 > 3000` → **FAŁSZ**
 - Wpada w sprawdzenie SWR: `1000 > 3000` → **FAŁSZ**
-- **Wynik**: zimne pudło, pobranie świeżych danych
+- **Wynik**: zimny miss, pobranie świeżych danych
 
 ### Scenariusz 4: po rewalidacji
 - Częściowy reset w `2000`
@@ -339,7 +339,7 @@ Obie używają identycznych:
 - Zmienił się schemat bazy danych (stary cache jest niekompatybilny)
 - Wystąpił problem bezpieczeństwa (wyciek wrażliwych danych)
 
-**Zachowanie**: wymusza zimne pudło — wszystkie requesty pobierają świeże dane
+**Zachowanie**: wymusza zimny miss — wszystkie requesty pobierają świeże dane
 
 ## Podsumowanie
 

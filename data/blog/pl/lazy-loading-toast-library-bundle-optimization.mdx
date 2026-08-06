@@ -13,7 +13,7 @@ Entry chunk ważył 604 KB. To podatek, który płaci każdy odwiedzający, niez
 
 Na vue3-toastify przypadały 22 KB tego chunka. Jego CSS dokładał kolejne 9 KB do entry stylesheeta, podnosząc entry.css ze 109 KB do 118 KB. Razem 31 KB pobierane przez każdego odwiedzającego dla funkcji, która odpala się wyłącznie w dashboardzie — panelu admina używanym przez garstkę osób z firmy.
 
-Trzydzieści jeden kilobajtów brzmi niegroźnie. Ale waga entry bundle'a kumuluje się w sposób, w jaki nie robią tego bundle per route:
+Trzydzieści jeden kilobajtów brzmi niegroźnie. Ale waga entry bundle'a kumuluje się w sposób, w jaki nie kumuluje się waga bundli przypisanych do konkretnych route'ów:
 
 - Blokuje pierwszy render na każdej stronie
 - Pobiera go każdy odwiedzający, nie tylko ci, którzy go potrzebują
@@ -174,7 +174,7 @@ export default defineNuxtPlugin((nuxt) => {
 })
 ```
 
-Słowo kluczowe `void` przed `import()` jest tam celowo. Mówi pluginowi: odpal dynamiczny import i zapomnij o nim — plugin rozwiązuje się natychmiast, nie czekając na załadowanie vue3-toastify. Aplikacja Vue inicjalizuje się i renderuje bez biblioteki toastów. Gdy użytkownik w końcu odpali mutację pokazującą toasta, funkcja `init()` z composable'a załaduje moduł (albo użyje go ponownie, jeśli import w tle zdążył się już zakończyć).
+Słowo kluczowe `void` przed `import()` jest tam celowo. Mówi pluginowi: odpal dynamiczny import i zapomnij o nim — plugin kończy się natychmiast, nie czekając na załadowanie vue3-toastify. Aplikacja Vue inicjalizuje się i renderuje bez biblioteki toastów. Gdy użytkownik w końcu odpali mutację pokazującą toasta, funkcja `init()` z composable'a załaduje moduł (albo użyje go ponownie, jeśli import w tle zdążył się już zakończyć).
 
 ### Część 3: aktualizacja wszystkich miejsc użycia
 

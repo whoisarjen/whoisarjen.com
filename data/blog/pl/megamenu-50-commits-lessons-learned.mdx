@@ -19,7 +19,7 @@ Pięćdziesiąt commitów. W jednym komponencie. W trzy miesiące.
 
 Czyli mniej więcej jeden commit co dwa dni, wciąż w tym samym pliku. W niektóre dni było ich kilka. W innych zdarzały się cykle revert, a potem reapply. Bałagan.
 
-Ale jest jedno „ale”: **ten komponent działa dziś świetnie**. Użytkownicy lubią nawigację. Kod da się utrzymywać. Te 50 commitów nie poszło na marne — to był po prostu proces.
+Ale sedno jest takie: **ten komponent działa dziś świetnie**. Użytkownicy lubią nawigację. Kod da się utrzymywać. Te 50 commitów nie poszło na marne — to był po prostu proces.
 
 ## Wzorce revertów
 
@@ -270,7 +270,7 @@ git commit -m "MegaMenu: Handle touch device first-tap-opens pattern"
 git commit -m "MegaMenu: Extract height calculation to computed"
 ```
 
-Ja z przyszłości rozumiem, co się zmieniło, bez czytania diffów.
+Za pół roku sam zrozumiem, co się zmieniło, bez wczytywania się w diffy.
 
 ## Metryki, które miały znaczenie
 
@@ -303,7 +303,7 @@ Nie refaktoryzuj na zapas. Poczekaj, aż zaimplementujesz daną rzecz 3 razy i z
 
 Stany hovera, obsługa dotyku, animacje, stany ładowania — każde z nich ma edge case'y, których nie przewidzisz. Wypuść, obserwuj, popraw.
 
-### 5. Śledź rotację w komponentach
+### 5. Śledź, które komponenty zmieniają się najczęściej
 
 ```bash
 # Which components change most?
@@ -312,7 +312,7 @@ git log --oneline --since="3 months ago" -- "*.vue" | \
     sort | uniq -c | sort -rn | head -10
 ```
 
-Komponenty o wysokiej rotacji zasługują na dodatkową uwagę — albo je uprość, albo zainwestuj w testy.
+Komponenty, które zmieniają się najczęściej, zasługują na dodatkową uwagę — albo je uprość, albo zainwestuj w testy.
 
 ## Komponent dzisiaj
 

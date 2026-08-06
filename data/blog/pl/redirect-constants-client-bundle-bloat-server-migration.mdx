@@ -242,7 +242,7 @@ Odpowiedź z perspektywy czasu jest oczywista: **przekierowania to sprawa serwer
 
 Wylądowały tam dla wygody. Navigation guard Vue Routera i tak już obsługiwał zmiany tras. Dodanie tablicy lookupowej to był jednolinijkowy import. Nikt nie musiał ruszać konfiguracji serwera, stawiać middleware ani pisać zapytań do bazy. Ścieżka najmniejszego oporu prowadziła prosto do client bundle'a.
 
-Tego wzorca warto wypatrywać w każdej aplikacji single-page. Logika routingu w SPA ma tendencję do zbierania odpowiedzialności, które należą do serwera: przekierowania, sprawdzanie uwierzytelnienia, wykrywanie lokalizacji, przypisywanie do testów A/B. Każde rozszerzenie wydaje się małe. Każde zwiększa payload JavaScriptu. I w przeciwieństwie do kodu komponentów logika routingu wykonuje się przy każdym wejściu na stronę, a nie tylko na stronach korzystających z konkretnego komponentu. Tree-shaking Ci nie pomoże, bo navigation guard importuje wszystko bezwarunkowo.
+Tego wzorca warto wypatrywać w każdej aplikacji single-page. Logika routingu w SPA ma tendencję do zbierania odpowiedzialności, które należą do serwera: przekierowania, sprawdzanie uwierzytelnienia, wykrywanie języka, przypisywanie do testów A/B. Każde rozszerzenie wydaje się małe. Każde zwiększa payload JavaScriptu. I w przeciwieństwie do kodu komponentów logika routingu wykonuje się przy każdym wejściu na stronę, a nie tylko na stronach korzystających z konkretnego komponentu. Tree-shaking Ci nie pomoże, bo navigation guard importuje wszystko bezwarunkowo.
 
 ### Pułapka przyrostowego wzrostu
 

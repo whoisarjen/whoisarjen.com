@@ -6,20 +6,20 @@ summary: 'Jak zbudowaliśmy wielowarstwowy system wyszukiwania, który rozumie i
 tags: ['PostgreSQL', 'Search', 'AI', 'E-commerce', 'Full-text Search', 'TypeScript', 'Performance']
 ---
 
-Zdarzyło ci się kiedyś trafić na wyszukiwarkę, która po prostu _rozumie_? Wpisujesz „biała umywalka łazienkowa nowoczesna", a ona jakimś cudem wie, że chodzi o to samo co „nowoczesna biała umywalka do łazienki", albo nawet co „modern white bathroom sink" po angielsku. To nie magia – to dobrze zaprojektowana inżynieria.
+Zdarzyło ci się kiedyś trafić na wyszukiwarkę, która po prostu _rozumie_? Wpisujesz „biała umywalka łazienkowa nowoczesna”, a ona jakimś cudem wie, że chodzi o to samo co „nowoczesna biała umywalka do łazienki”, albo nawet co „modern white bathroom sink” po angielsku. To nie magia – to dobrze zaprojektowana inżynieria.
 
 Dziś odsłaniam kulisy systemu wyszukiwania, który zbudowałem i który codziennie obsługuje tysiące zapytań produktowych w 9 językach. Nie stoi za nim ani ChatGPT, ani Claude – to czysty PostgreSQL, TypeScript i kilka naprawdę sprytnych algorytmów, które sprawiają, że całość wygląda, jakby napędzało ją AI.
 
 ## Dlaczego większość wyszukiwarek jest beznadziejna
 
-Powiedzmy sobie szczerze – wyszukiwanie w e-commerce zwykle jest tragiczne. Szukasz „umywalka łazienkowa biała" i nie dostajesz nic, bo produkt siedzi w bazie jako „Biała misa umywalkowa do łazienki". Zrobiłeś literówkę? Powodzenia. Szukasz w innym języku? Zapomnij.
+Powiedzmy sobie szczerze – wyszukiwanie w e-commerce zwykle jest tragiczne. Szukasz „umywalka łazienkowa biała” i nie dostajesz nic, bo produkt siedzi w bazie jako „Biała misa umywalkowa do łazienki”. Zrobiłeś literówkę? Powodzenia. Szukasz w innym języku? Zapomnij.
 
 Problem polega na tym, że tradycyjne wyszukiwarki myślą jak komputery, a nie jak ludzie. Dopasowują słowa kluczowe dokładnie i na tym kończą. A ludzie są chaotyczni:
 
-- Robimy literówki: „umywalak łazienkowa" → „umywalka łazienkowa"
-- Używamy różnych słów: „umywalka" vs „misa umywalkowa" vs „zlew"
-- Dorzucamy szum: „umywalka do nowoczesnej łazienki" vs „nowoczesna umywalka łazienkowa"
-- Szukamy w różnych językach: „łazienka" → „bathroom"
+- Robimy literówki: „umywalak łazienkowa” → „umywalka łazienkowa”
+- Używamy różnych słów: „umywalka” vs „misa umywalkowa” vs „umywalka nablatowa”
+- Dorzucamy szum: „umywalka do nowoczesnej łazienki” vs „nowoczesna umywalka łazienkowa”
+- Szukamy w różnych językach: „łazienka” → „bathroom”
 
 Nasz system wyszukiwania radzi sobie z tym wszystkim. Zobaczmy jak.
 
@@ -40,9 +40,9 @@ const PREPOSITIONS: { [key in Language]: string[] } = {
 const q = removeDiacritics(removeWordsBetweenFirstAndLast(qRaw, PREPOSITIONS[lang]))
 ```
 
-**Dlaczego to działa:** ludzie szukają tak, jak mówią. „umywalka do łazienki" i „umywalka łazienkowa" powinny zwrócić identyczne wyniki. Nasza funkcja `removeWordsBetweenFirstAndLast` zostawia pierwsze i ostatnie słowo (zwykle najważniejsze), a przyimki ze środka odfiltrowuje.
+**Dlaczego to działa:** ludzie szukają tak, jak mówią. „umywalka do łazienki” i „umywalka łazienkowa” powinny zwrócić identyczne wyniki. Nasza funkcja `removeWordsBetweenFirstAndLast` zostawia pierwsze i ostatnie słowo (zwykle najważniejsze), a przyimki ze środka odfiltrowuje.
 
-**Normalizacja znaków diakrytycznych** ogarnia znaki międzynarodowe – „ñ" staje się „n", „ş" staje się „s", dzięki czemu wyszukiwanie działa niezależnie od języka.
+**Normalizacja znaków diakrytycznych** ogarnia znaki międzynarodowe – „ñ” staje się „n”, „ş” staje się „s”, dzięki czemu wyszukiwanie działa niezależnie od języka.
 
 Ale najciekawszy jest ten fragment – **generowanie kodów złożonych**:
 
@@ -59,11 +59,11 @@ const perfectCodes = splitQ.reduce((previous, current, index) => {
 }, [] as string[])
 ```
 
-Jeśli ktoś wpisze „ABC DEF", powstanie z tego `["ABC", "ABC_DEF", "DEF"]`. Idealne dla produktów z kodami złożonymi albo gdy użytkownik wpisuje fragment kodu produktu.
+Jeśli ktoś wpisze „ABC DEF”, powstanie z tego `["ABC", "ABC_DEF", "DEF"]`. Idealne dla produktów z kodami złożonymi albo gdy użytkownik wpisuje fragment kodu produktu.
 
 ### Warstwa 2: budowa ważonego wektora
 
-Tutaj robi się naprawdę ciekawie. Każdy produkt dostaje przeszukiwalny „wektor nazwy" zbudowany z kilku komponentów o różnych wagach:
+Tutaj robi się naprawdę ciekawie. Każdy produkt dostaje przeszukiwalny „wektor nazwy” zbudowany z kilku komponentów o różnych wagach:
 
 ```typescript
 export const buildNameVector = (
@@ -160,7 +160,7 @@ const tsQuery = splitQ
   .join(' | ')
 ```
 
-Dla słów dłuższych niż 3 znaki obcinamy ostatni znak i dokładamy `:*`, żeby dopasowywać po prefiksie. To właśnie łapie literówki – „umywalak" trafia w „umywalka".
+Dla słów dłuższych niż 3 znaki obcinamy ostatni znak i dokładamy `:*`, żeby dopasowywać po prefiksie. To właśnie łapie literówki – „umywalak” trafia w „umywalka”.
 
 #### Poziom 3: trafienia po podobieństwie
 
@@ -202,7 +202,7 @@ FOREACH query_word IN ARRAY query_words LOOP
 END LOOP;
 ```
 
-**Dlaczego to takie ważne:** jeśli ktoś szuka „red bathroom sink luxury", a produkt dobrze pasuje do „red", „bathroom" i „sink", ale nie ma w nazwie żadnego „luxury", klasyczne liczenie punktów mocno by go ukarało. Ta funkcja potrafi zignorować najgorsze dopasowanie („luxury") i mimo wszystko wysoko ustawić produkt w rankingu.
+**Dlaczego to takie ważne:** jeśli ktoś szuka „red bathroom sink luxury”, a produkt dobrze pasuje do „red”, „bathroom” i „sink”, ale nie ma w nazwie żadnego „luxury”, klasyczne liczenie punktów mocno by go ukarało. Ta funkcja potrafi zignorować najgorsze dopasowanie („luxury”) i mimo wszystko wysoko ustawić produkt w rankingu.
 
 ### Warstwa 5: integracja z logiką biznesową
 
@@ -611,4 +611,4 @@ Chcesz zbudować coś podobnego? Zacznij prosto, od dokładnego dopasowania, dok
 
 ---
 
-\*Budowanie inteligentnego wyszukiwania nie polega na sięganiu po najnowsze modele AI – polega na zrozumieniu użytkowników i napisaniu sprytnych algorytmów, które sprawiają wrażenie magii. Czasem najlepsze AI to po prostu bardzo dobrze przemyślany SQL.
+_Czasem najlepsze AI to po prostu bardzo dobrze przemyślany SQL._

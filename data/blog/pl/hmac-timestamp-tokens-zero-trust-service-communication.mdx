@@ -7,7 +7,7 @@ tags: ['Security', 'HMAC', 'Architecture', 'Node.js', 'TypeScript', 'Microservic
 
 ## Problem z zaufaniem do samego siebie
 
-Kiedy rozbijasz monolit na serwisy, coś, co było wywołaniem funkcji, staje się requestem HTTP. Wczoraj twój handler wyszukiwarki działał w tym samym procesie co sklep — autoryzacja była domyślna. Dziś działa na osobnym serwerze, a w jego URL może uderzyć każdy z internetu.
+Kiedy rozbijasz monolit na serwisy, coś, co było wywołaniem funkcji, staje się requestem HTTP. Wczoraj twój handler wyszukiwarki działał w tym samym procesie co sklep — uwierzytelnianie było niejawne. Dziś działa na osobnym serwerze, a w jego URL może uderzyć każdy z internetu.
 
 Odruchowo sięga się po klucze API. Generujesz długi losowy string, wrzucasz go do zmiennych środowiskowych obu serwisów i sprawdzasz przy każdym requeście. Wystarczająco proste:
 
@@ -24,7 +24,7 @@ Działa, dopóki nie przestanie. Klucze API mają trzy cechy, które przy skali 
 
 **Są statyczne.** Rotacja klucza API oznacza jednoczesną aktualizację zmiennych środowiskowych we wszystkich serwisach. Przeoczysz jeden i komunikacja między serwisami sypie się na produkcji. W monorepo z trzema serwisami to trzy deploye, które muszą pójść równo. W większej architekturze to koszmar koordynacyjny.
 
-**Nic nie mówią o intencji.** Klucz API mówi tyle: „dzwoni ktoś, kto ma ten string”. Nie mówi, kiedy request powstał, czy jest świeży ani czy nie został właśnie odtworzony z nagrania. Twój serwis przyjmie identyczne żądania o drugiej w nocy we wtorek i o trzeciej po południu w piątek, nie mając jak odróżnić prawdziwego ruchu od odtworzonej kopii.
+**Nic nie mówią o intencji.** Klucz API mówi tyle: „wywołanie robi ktoś, kto ma ten string”. Nie mówi, kiedy request powstał, czy jest świeży ani czy nie został właśnie odtworzony z nagrania. Twój serwis przyjmie identyczne żądania o drugiej w nocy we wtorek i o trzeciej po południu w piątek, nie mając jak odróżnić prawdziwego ruchu od odtworzonej kopii.
 
 Trafiliśmy na wszystkie trzy. Po rozbiciu monolitu na osobne serwisy potrzebowaliśmy sposobu, żeby serwis A mógł powiedzieć serwisowi B: „autoryzowałem ten konkretny request, właśnie teraz, a ta autoryzacja wygasa za kilka sekund”.
 
@@ -301,7 +301,7 @@ Tokeny HMAC z timestampem nie są uniwersalne. Oto kiedy sięgnąć po coś inne
 
 **API wystawione dla klientów.** Nie dasz użytkownikom końcowym swojego współdzielonego sekretu. Tokeny HMAC z timestampem są do komunikacji serwer-serwer, gdzie obie strony trzymają sekret. Do API dla klientów użyj OAuth, JWT albo kluczy API z porządnym rate limitingiem.
 
-**Serwisy wielodostępowe.** Jeśli serwis B obsługuje wielu wywołujących z różnymi uprawnieniami, jeden współdzielony sekret ich nie rozróżni. Potrzebowałbyś sekretu na każdego wywołującego, a wtedy budujesz już system zarządzania kluczami i prawdopodobnie powinieneś użyć JWT z claimami o określonym zakresie.
+**Serwisy multi-tenant.** Jeśli serwis B obsługuje wielu wywołujących z różnymi uprawnieniami, jeden współdzielony sekret ich nie rozróżni. Potrzebowałbyś sekretu na każdego wywołującego, a wtedy budujesz już system zarządzania kluczami i prawdopodobnie powinieneś użyć JWT z claimami o określonym zakresie.
 
 **Wymogi audytowe.** Tokeny HMAC są ulotne — po wygaśnięciu nie zostaje po nich ślad. Jeśli musisz audytować, kto co i kiedy wywołał, szczegóły requestów trzeba logować osobno. Sam token nie niesie żadnej informacji o tożsamości.
 
@@ -351,7 +351,7 @@ Udział głównej aplikacji kończy się na kroku 2. Zjada około 1 ms na policz
 
 5. **Rotacja to zmiana zmiennej środowiskowej, nie migracja.** Żadnych aktualizacji bazy, unieważniania tokenów ani koordynacji poza wdrożeniem nowego sekretu.
 
-6. **Ten wzorzec świetnie łączy się z przekierowaniami 307.** Główna aplikacja załatwia logikę autoryzacji i schodzi z drogi. Serwis odbierający waliduje token i wykonuje właściwą robotę. Żaden z nich nie dotyka budżetu pamięci drugiego.
+6. **Ten wzorzec świetnie łączy się z przekierowaniami 307.** Główna aplikacja załatwia logikę uwierzytelniania i schodzi z drogi. Serwis odbierający waliduje token i wykonuje właściwą robotę. Żaden z nich nie dotyka budżetu pamięci drugiego.
 
 Implementacja to jakieś 30 linii kodu po każdej stronie. Prymitywy kryptograficzne są wbudowane w Node.js — zero zewnętrznych zależności. Ten wzorzec od dekad działa w autentykacji tokenowej CDN-ów, weryfikacji webhooków i podpisywaniu w API gateway. Nie wymyślamy niczego nowego — po prostu przykładamy dobrze przetestowany wzorzec do typowego problemu mikroserwisów.
 

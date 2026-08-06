@@ -13,9 +13,9 @@ Jeśli twoje API serwuje duże odpowiedzi — katalogi produktów, feedy danych,
 Client → API Server (auth + fetch from storage) → stream response back
 ```
 
-Serwer API autoryzuje request, pobiera dane ze storage'u lub CDN i przekazuje każdy bajt z powrotem do klienta. Działa, ale ma problemy, które narastają wraz z ruchem.
+Serwer API uwierzytelnia request, pobiera dane ze storage'u lub CDN i przekazuje każdy bajt z powrotem do klienta. Działa, ale ma problemy, które narastają wraz z ruchem.
 
-Prowadziliśmy ten wzorzec dla naszych feedów B2B. Klienci prosili o katalogi produktów (pliki JSON/XML o rozmiarze 500 KB–2 MB), a nasz serwer pobierał plik ze storage'u CDN i streamował go z powrotem. Wciąż wracały trzy problemy:
+Stosowaliśmy ten wzorzec przy naszych feedach B2B. Klienci prosili o katalogi produktów (pliki JSON/XML o rozmiarze 500 KB–2 MB), a nasz serwer pobierał plik ze storage'u CDN i streamował go z powrotem. Wciąż wracały trzy problemy:
 
 **Niezgodność Content-Encoding.** Gdy twój serwer pobiera plik z CDN, wiele klientów HTTP automatycznie dekompresuje odpowiedzi gzip. Ale oryginalny nagłówek `Content-Length` nadal opisuje rozmiar skompresowany. Klient dostaje 800 KB danych, a nagłówek mówi 300 KB — część klientów HTTP ucina odpowiedź na 300 KB.
 
@@ -32,7 +32,7 @@ Client → API Server (auth + generate signed URL) → 307 Redirect
 Client → CDN Edge (direct download) ✓
 ```
 
-Twój serwer zajmuje się autoryzacją, rate limitingiem i kontrolą dostępu — a potem schodzi z drogi. CDN zajmuje się dostarczaniem treści, kompresją i globalną dystrybucją na edge.
+Twój serwer zajmuje się uwierzytelnianiem, rate limitingiem i kontrolą dostępu — a potem schodzi z drogi. CDN zajmuje się dostarczaniem treści, kompresją i globalną dystrybucją na edge.
 
 To nie jest nowatorski pomysł. To dominujący wzorzec przy dużej skali.
 
@@ -40,11 +40,11 @@ To nie jest nowatorski pomysł. To dominujący wzorzec przy dużej skali.
 
 ### Netflix — Open Connect
 
-Netflix zbudował wokół tej koncepcji cały CDN (Open Connect). Ich serwery API obsługują control plane — autoryzację, wybór treści, decyzje o bitrate — a potem kierują klientów do najbliższego Open Connect Appliance po samo wideo. API nigdy nie dotyka bajtów wideo. Według zespołu inżynierskiego Netflixa 95% ich globalnego ruchu jest serwowane bezpośrednimi połączeniami między ich urządzeniami na edge a sieciami ISP.
+Netflix zbudował wokół tej koncepcji cały CDN (Open Connect). Ich serwery API obsługują control plane — uwierzytelnianie, wybór treści, decyzje o bitrate — a potem kierują klientów do najbliższego Open Connect Appliance po samo wideo. API nigdy nie dotyka bajtów wideo. Według zespołu inżynierskiego Netflixa 95% ich globalnego ruchu jest serwowane bezpośrednimi połączeniami między ich urządzeniami na edge a sieciami ISP.
 
 ### Spotify — rozdzielenie control plane i data plane
 
-Architektura Spotify jawnie rozdziela control plane od data plane. Bezstanowe serwery API obsługują autoryzację JWT i generują podpisane URL-e. Klienci streamują potem audio bezpośrednio z najbliższego node'a CDN na edge. Ich blog inżynierski opisuje to rozdzielenie jako klucz do obsługi miliardów odtworzeń bez zamieniania serwerów API w wąskie gardło.
+Architektura Spotify jawnie rozdziela control plane od data plane. Bezstanowe serwery API obsługują uwierzytelnianie JWT i generują podpisane URL-e. Klienci streamują potem audio bezpośrednio z najbliższego node'a CDN na edge. Ich blog inżynierski opisuje to rozdzielenie jako klucz do obsługi miliardów odtworzeń bez zamieniania serwerów API w wąskie gardło.
 
 ### Docker Registry — 307 zapisane w specyfikacji
 
@@ -52,11 +52,11 @@ Docker Registry HTTP API V2 używa redirectów 307 na poziomie specyfikacji. Gdy
 
 ### GitHub — presigned URL-e do S3
 
-GitHub stosuje to samo podejście przy pobieraniu plików. URL-e do assetów zwracają redirecty do presigned URL-i AWS S3 z wbudowanymi parametrami autoryzacyjnymi. Serwery GitHuba nigdy nie proxują bajtów plików.
+GitHub stosuje to samo podejście przy pobieraniu plików. URL-e do assetów zwracają redirecty do presigned URL-i AWS S3 z wbudowanymi parametrami uwierzytelniającymi. Serwery GitHuba nigdy nie proxują bajtów plików.
 
 ### AWS S3 — wzorzec kanoniczny
 
-AWS dokumentuje to jako architekturę kanoniczną: funkcja Lambda generuje presigned URL i odpowiada redirectem. Klient pobiera plik prosto z S3. AWS opisuje to tak: „Plik idzie bezpośrednio z przeglądarki do S3 — twoje API generuje tylko przepustkę".
+AWS dokumentuje to jako architekturę kanoniczną: funkcja Lambda generuje presigned URL i odpowiada redirectem. Klient pobiera plik prosto z S3. AWS opisuje to tak: „Plik idzie bezpośrednio z przeglądarki do S3 — twoje API generuje tylko przepustkę”.
 
 ## Jak działają podpisane URL-e
 
@@ -113,7 +113,7 @@ Wszystkie nowoczesne biblioteki HTTP domyślnie podążają za redirectami 307 �
 
 ## Implementacja
 
-Oto kompletny wzorzec endpointu API, który autoryzuje, sprawdza cache i przekierowuje:
+Oto kompletny wzorzec endpointu API, który uwierzytelnia, sprawdza cache i przekierowuje:
 
 ```typescript
 export default defineEventHandler(async (event) => {
@@ -256,13 +256,13 @@ Liczby mówią same za siebie:
 | Metryka | Wzorzec z proxy | Wzorzec z redirectem |
 |--------|--------------|-----------------|
 | Transfer na origin (trafienie w cache) | 500 KB–2 MB na request | ~0 (tylko odpowiedź z redirectem) |
-| Czas odpowiedzi (trafienie w cache) | 200–500 ms (fetch + streaming) | 50–100 ms (autoryzacja + redirect) |
-| Czas compute serverless | Pełny czas trwania requestu | Tylko sprawdzenie autoryzacji |
+| Czas odpowiedzi (trafienie w cache) | 200–500 ms (fetch + streaming) | 50–100 ms (uwierzytelnianie + redirect) |
+| Czas compute serverless | Pełny czas trwania requestu | Tylko sprawdzenie uwierzytelnienia |
 | Tryby awarii | Ucięty strumień, niezgodność encodingu, timeout CDN | Żadne po stronie origin |
 
 Zespół inżynierski Fastly udokumentował, że poprawa offloadu na CDN o 5% może oznaczać spadek obciążenia origin o 50%. Przy 90% offloadu przejście na 95% nie brzmi imponująco — a połowi liczbę requestów uderzających w twoje serwery.
 
-Warner Bros. Discovery raportowało offload origin powyżej 95% dla treści on-demand po wdrożeniu tego wzorca z Media CDN od Google, opisując integrację jako „zaskakująco bezproblemową".
+Warner Bros. Discovery raportowało offload origin powyżej 95% dla treści on-demand po wdrożeniu tego wzorca z Media CDN od Google, opisując integrację jako „zaskakująco bezproblemową”.
 
 ## Kompromisy
 
@@ -289,7 +289,7 @@ Ten wzorzec błyszczy, gdy:
 Mniej się przydaje, gdy:
 
 - **Odpowiedzi są malutkie** (poniżej 1 KB) — narzut redirectu przewyższa koszt proxowania
-- **Każda odpowiedź jest unikalna** — brak szans na cache, zawsze zimne pudło
+- **Każda odpowiedź jest unikalna** — brak szans na cache, zawsze zimny miss
 - **Klienci nie podążają za redirectami** — urządzenia embedded, bardzo stare stacki HTTP
 - **Potrzebujesz transformować odpowiedź** — jeśli serwer modyfikuje odpowiedź per klient, musi widzieć bajty
 
@@ -307,6 +307,6 @@ Mniej się przydaje, gdy:
 
 6. **To wzorzec od dawna ugruntowany.** Netflix, Spotify, Docker, GitHub i AWS używają jego wariantów. Nie wymyślasz niczego nowego — adoptujesz sprawdzoną architekturę.
 
-Wdrożenie przeniosło nas z debugowania uciętych strumieni i niezgodności kodowania treści do systemu, w którym serwer origin przy trafieniu w cache nie robi prawie nic. CDN zajmuje się kompresją, globalną dystrybucją i dostarczaniem treści. Nasz serwer mówi tylko „idź tam" i bierze się za kolejny request.
+Wdrożenie przeniosło nas z debugowania uciętych strumieni i niezgodności kodowania treści do systemu, w którym serwer origin przy trafieniu w cache nie robi prawie nic. CDN zajmuje się kompresją, globalną dystrybucją i dostarczaniem treści. Nasz serwer mówi tylko „idź tam” i bierze się za kolejny request.
 
 Czasem najlepszą optymalizacją nie jest szybsze proxowanie bajtów — tylko nieproxowanie ich w ogóle.

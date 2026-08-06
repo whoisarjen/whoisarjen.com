@@ -159,11 +159,11 @@ After:
 └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
-API B2B stało się samodzielną aplikacją Nitro — ten sam framework (Nitro to silnik serwerowy Nuxta), ale bez pełnego narzutu Nuxta: SSR Vue, routingu, kontekstu i18n i renderowania komponentów. Same handlery HTTP, autoryzacja i serializacja danych.
+API B2B stało się samodzielną aplikacją Nitro — ten sam framework (Nitro to silnik serwerowy Nuxta), ale bez pełnego narzutu Nuxta: SSR Vue, routingu, kontekstu i18n i renderowania komponentów. Same handlery HTTP, uwierzytelnianie i serializacja danych.
 
 Crony przeniosły się do kolejnej samodzielnej aplikacji Nitro. Te zadania zużywały średnio 961 MB podczas wykonania, ze szczytami 1,3 GB — i konkurowały o tę samą pulę pamięci co requesty użytkowników.
 
-Główna aplikacja Nuxt zatrzymała sklep i dashboard. Bez rebuildów B2B i skoków z cronów zjadających jej pamięć spokojnie zeszła z powrotem do 2 GB w tierze Standard.
+Przy głównej aplikacji Nuxt zostały sklep i dashboard. Bez rebuildów B2B i skoków z cronów zjadających jej pamięć spokojnie zeszła z powrotem do 2 GB w tierze Standard.
 
 ### Matematyka, która wszystko wyjaśniła
 
@@ -242,16 +242,16 @@ Każdy klient HTTP podąża za redirectami 307 automatycznie. Zero zmian w kodzi
 
 ## Bonus: redirecty
 
-Wydzielenie API pozwoliło nam też naprawić problem proxowania odpowiedzi, od którego zaczęło się całe śledztwo. Zamiast pobierać pliki ze storage'u CDN i streamować bajty z powrotem do klientów (co powodowało niezgodności `Content-Length` i ucięte odpowiedzi), teraz autoryzujemy request, generujemy podpisany URL do CDN i robimy redirect:
+Wydzielenie API pozwoliło nam też naprawić problem proxowania odpowiedzi, od którego zaczęło się całe śledztwo. Zamiast pobierać pliki ze storage'u CDN i streamować bajty z powrotem do klientów (co powodowało niezgodności `Content-Length` i ucięte odpowiedzi), teraz uwierzytelniamy request, generujemy podpisany URL do CDN i robimy redirect:
 
 ```
 Before: Client → API (auth + proxy 2MB of bytes) → Response
 After:  Client → API (auth + generate signed URL) → 307 → CDN (direct download)
 ```
 
-Serwer API zajmuje się autoryzacją i kontrolą dostępu, po czym schodzi z drogi. CDN zajmuje się dostarczaniem treści, kompresją i dystrybucją na edge. Koniec z niezgodnymi nagłówkami. Koniec z uciętymi katalogami. Koniec z płaceniem za compute serverless tylko po to, żeby przekazywać bajty między dwoma innymi systemami.
+Serwer API zajmuje się uwierzytelnianiem i kontrolą dostępu, po czym schodzi z drogi. CDN zajmuje się dostarczaniem treści, kompresją i dystrybucją na edge. Koniec z niezgodnymi nagłówkami. Koniec z uciętymi katalogami. Koniec z płaceniem za compute serverless tylko po to, żeby przekazywać bajty między dwoma innymi systemami.
 
-Logi produkcyjne po przełączeniu pokazały 83,4% trafień w cache CDN, przy czym trafienia kończyły się 24 razy szybciej niż zimne pudła (mediana 58 ms wobec 471 ms).
+Logi produkcyjne po przełączeniu pokazały 83,4% trafień w cache CDN, przy czym trafienia kończyły się 24 razy szybciej niż zimne missy (mediana 58 ms wobec 471 ms).
 
 ## Kiedy dzielić monolit
 

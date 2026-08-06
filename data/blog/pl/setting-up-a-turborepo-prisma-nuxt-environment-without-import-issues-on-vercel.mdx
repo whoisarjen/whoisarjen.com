@@ -38,7 +38,7 @@ prisma generate --schema=../app1/prisma/schema.prisma
 
 To podejście rozwiązało problem bez konieczności duplikowania konfiguracji Prismy we wszystkich projektach i pozbyło się kłopotów z tym, że Vercel nie generował klienta poprawnie. Deploye na **Vercelu** zaczęły działać bez zarzutu i przestałem się przejmować problemami z importem Prisma Clienta.
 
-Dodatkowo mogłem ponownie wykorzystać wyeksportowanego klienta Prismy przez app1, w której ustawienia były już zadeklarowane, dzięki czemu cała konfiguracja została w jednym miejscu.
+Dodatkowo mogłem ponownie wykorzystać klienta Prismy wyeksportowanego z app1, gdzie ustawienia były już zadeklarowane, dzięki czemu cała konfiguracja została w jednym miejscu.
 
 ### Podsumowanie
 

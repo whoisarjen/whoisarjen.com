@@ -1,5 +1,5 @@
 ---
-title: "Inteligentny cache SWR: świeżość świadoma kontekstu użytkownika w e-commerce"
+title: "Inteligentny cache SWR: świeżość danych zależna od kontekstu użytkownika w e-commerce"
 date: 2025-12-28T19:00:00Z
 summary: 'Jak wdrożyć cache Stale-While-Revalidate, który dostosowuje się do typu użytkownika i wrażliwości endpointu. Klienci B2B dostają świeże stany magazynowe, a anonimowi odwiedzający szybsze odpowiedzi z cache.'
 tags: ['Caching', 'SWR', 'Performance', 'E-commerce', 'Node.js', 'TypeScript', 'Redis']
@@ -32,7 +32,7 @@ Kluczowa obserwacja jest taka, że użytkownicy dostają natychmiastowe odpowied
 
 Dla stron o dużym ruchu SWR działa znakomicie — cache odświeża się tak często, że nieaktualność jest minimalna. Dla stron o małym ruchu okno bywa dłuższe, ale zwykle jest to akceptowalne.
 
-## Problem: jeden rozmiar nie pasuje do wszystkich
+## Problem: jedno podejście nie działa dla wszystkich
 
 I tu robi się ciekawie. Rozważmy dwa typy użytkowników odwiedzających tę samą stronę produktu:
 
@@ -49,7 +49,7 @@ I tu robi się ciekawie. Rozważmy dwa typy użytkowników odwiedzających tę s
 
 Serwowanie obu tej samej odpowiedzi z cache nie ma sensu. Klient B2B potrzebuje świeżych danych, a anonimowy użytkownik szybkich.
 
-## Rozwiązanie: świeżość świadoma kontekstu
+## Rozwiązanie: świeżość zależna od kontekstu
 
 Pomysł jest prosty: **pomijaj SWR dla zalogowanych użytkowników na endpointach wrażliwych na stany magazynowe**.
 
@@ -242,7 +242,7 @@ To samo myślenie stosuje się do:
 Wzorzec "requireFreshForLoggedIn" rozwiązuje realny problem cache'owania w e-commerce: równoważy szybkość dla anonimowych odwiedzających z aktualnością dla zalogowanych klientów B2B.
 
 Najważniejsze wnioski:
-1. SWR jest potężne, ale cache'owanie w wersji jeden-rozmiar-dla-wszystkich ma swoje ograniczenia
+1. SWR jest potężne, ale uniwersalne cache'owanie dla wszystkich ma swoje ograniczenia
 2. Kontekst użytkownika (zalogowany kontra anonimowy) powinien wpływać na zachowanie cache
 3. Wrażliwość endpointu (dane o stanach kontra treść) też ma znaczenie
 4. Oddzielenie danych wrażliwych na czas od cache'owanych endpointów to czysty wzorzec architektoniczny

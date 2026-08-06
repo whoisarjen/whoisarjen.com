@@ -8,9 +8,9 @@ tags: ['DateTime', 'Timezone', 'UTC', 'JavaScript', 'Architecture', 'i18n']
 
 ## Bug, który nas ugryzł
 
-Mieliśmy funkcję harmonogramowania treści. Autorzy mogli ustawiać artykułom datę „opublikuj o". Dość proste, prawda?
+Mieliśmy funkcję harmonogramowania treści. Autorzy mogli ustawiać artykułom datę „opublikuj o”. Dość proste, prawda?
 
-Potem zauważyliśmy, że artykuły publikują się o złych godzinach. Artykuł zaplanowany na 12:00 w Polsce wchodził na żywo o 10:00. Użytkownicy w Niemczech widzieli inne godziny publikacji niż użytkownicy w Hiszpanii.
+Potem zauważyliśmy, że artykuły publikują się o złych godzinach. Artykuł zaplanowany na 12:00 w Polsce publikował się o 10:00. Użytkownicy w Niemczech widzieli inne godziny publikacji niż użytkownicy w Hiszpanii.
 
 Gdzie był problem? Nasza obsługa daty i czasu była jednym wielkim bałaganem. Część kodu używała czasu lokalnego, część UTC, i nic nie było spójne.
 
@@ -28,7 +28,7 @@ To oznacza:
 4. Backend porównuje w UTC
 5. Frontend konwertuje UTC z powrotem na czas lokalny do wyświetlenia
 
-Bez wyjątków. Bez „sprytnych" konwersji po stronie serwera.
+Bez wyjątków. Bez „sprytnych” konwersji po stronie serwera.
 
 ## Narzędzia
 
@@ -227,8 +227,8 @@ Nasz wzorzec: frontend konwertuje raz. Backend ufa temu, co dostał.
 
 ### 3. Spójne wyświetlanie u wszystkich użytkowników
 
-Użytkownik A w Polsce widzi „12:00"
-Użytkownik B w Niemczech widzi „11:00" (ten sam moment w czasie)
+Użytkownik A w Polsce widzi „12:00”
+Użytkownik B w Niemczech widzi „11:00” (ten sam moment w czasie)
 
 Oba odczyty są poprawne dla swojej strefy. Wartość UTC pod spodem jest identyczna.
 

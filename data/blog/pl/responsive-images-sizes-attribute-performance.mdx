@@ -36,7 +36,7 @@ Nowoczesne komponenty obrazów (w tym ten z Nuxt Image v2, którego używamy) ge
 
 Bez atrybutu `sizes` biblioteka obrazów cofa się do **deskryptorów gęstości** (`1x`, `2x`). To mówi przeglądarce: "wybierz obrazek wyłącznie na podstawie device pixel ratio". Urządzenie 1x dostaje obrazek 640px. Urządzenie retina 2x dostaje 1280px. Faktyczny rozmiar wyświetlania obrazka na stronie jest kompletnie nieistotny.
 
-To jest ta kluczowa różnica, którą większość developerów przeoczą. Istnieją dwa typy deskryptorów w srcset i zachowują się bardzo różnie:
+To kluczowa różnica, którą większość developerów przeocza. Istnieją dwa typy deskryptorów w srcset i zachowują się bardzo różnie:
 
 | Typ deskryptora | Przykład | Logika wyboru w przeglądarce |
 |----------------|---------|------------------------|
@@ -181,7 +181,7 @@ Usunęliśmy `preload` z pięciu z sześciu obrazów, zostawiając go tylko na b
 
 ## Co zmieniło się w praktyce
 
-Łączny efekt tych trzech zmian — poprawnego `sizes` na wszystkich obrazach, responsywnych linków preload i oszczędnego użycia preloadu — było wyraźnie widać w waterfallu sieciowym.
+Łączny efekt tych trzech zmian — poprawnego `sizes` na wszystkich obrazach, responsywnych linków preload i oszczędnego użycia preloadu — był wyraźnie widoczny w waterfallu sieciowym.
 
 **Przed (mobile, strona listingu produktów):**
 - 12 miniatur produktów po 1280px szerokości: ~1,8 MB łącznie
@@ -199,7 +199,7 @@ Usunęliśmy `preload` z pięciu z sześciu obrazów, zostawiając go tylko na b
 
 Na stronie marketingowej efekt był jeszcze bardziej spektakularny na stronie listingu bloga. Obrazy hero, które pobierały się w pełnej rozdzielczości na potrzeby karuzeli, dopasowały się poprawnie do viewportu. Obrazy siatki kolekcji, pokazywane jako karty o szerokości 320px, przestały prosić o oryginały 1280px.
 
-Dla kontekstu: strona marketingowa miała 35 wystąpień obrazów na wszystkich podstronach. Każde hero na pełne wykrojenie dostało `sizes="100vw"`. Karty listingu bloga w responsywnej siatce dostały `sizes="100vw md:50vw lg:33vw"`. Logotypy i portrety o stałym rozmiarze dostały jawne wartości pikselowe w rodzaju `sizes="192px"` czy `sizes="250px"`. Migracja całej strony zajęła niecałą godzinę, bo kiedy raz zrozumiesz wzorzec, każdy obrazek to decyzja na dziesięć sekund: spójrz w CSS, wpisz sizes, idź dalej.
+Dla kontekstu: strona marketingowa miała 35 wystąpień obrazów na wszystkich podstronach. Każde hero na pełną szerokość dostało `sizes="100vw"`. Karty listingu bloga w responsywnej siatce dostały `sizes="100vw md:50vw lg:33vw"`. Logotypy i portrety o stałym rozmiarze dostały jawne wartości pikselowe w rodzaju `sizes="192px"` czy `sizes="250px"`. Migracja całej strony zajęła niecałą godzinę, bo kiedy raz zrozumiesz wzorzec, każdy obrazek to decyzja na dziesięć sekund: spójrz w CSS, wpisz sizes, idź dalej.
 
 ## Jak to utrwaliliśmy
 
@@ -220,7 +220,7 @@ Jeśli używasz jakiegokolwiek frameworka do optymalizacji obrazów (Nuxt Image,
 3. Spójrz na kolumnę "Size" przy największych obrazach
 4. Porównaj wymiary pobranego obrazka z wymiarami wyświetlania
 
-Jeśli twoje obrazy pobierają się w 1280px lub więcej, a wyświetlają w 300-400px, to niemal na pewno masz problem z brakującym atrybutem `sizes`. Możesz też sprawdzić wygenerowany HTML: jeśli twoje atrybuty `srcset` używają deskryptorów gęstości (`1x`, `2x`) zamiast deskryptorów szerokości (`300w`, `640w`), przeglądarka nie dokonuje wyboru świadomego viewportu.
+Jeśli twoje obrazy pobierają się w 1280px lub więcej, a wyświetlają w 300-400px, to niemal na pewno masz problem z brakującym atrybutem `sizes`. Możesz też sprawdzić wygenerowany HTML: jeśli twoje atrybuty `srcset` używają deskryptorów gęstości (`1x`, `2x`) zamiast deskryptorów szerokości (`300w`, `640w`), przeglądarka nie wybiera obrazka na podstawie viewportu.
 
 Naprawa jest mechaniczna: przy każdym obrazku spójrz w CSS i odpowiedz na pytanie "jak szeroki jest ten obrazek na każdym breakpoincie?". Wpisz to jako wartość `sizes`. Jeśli obrazek zawsze ma 56px szerokości, wpisz `sizes="56px"`. Jeśli jest pełnej szerokości na mobile i połowy na desktopie, wpisz `sizes="100vw md:50vw"` (albo równoważną składnię media query dla twojego frameworka).
 
@@ -236,7 +236,7 @@ Uważamy, że ten problem jest tak powszechny przez trzy zbiegające się czynni
 
 **Na desktopie działa to dobrze.** Podejście z deskryptorami gęstości pobiera natywną szerokość przy 1x i podwójną przy 2x. W przeglądarkach desktopowych, gdzie viewport jest szeroki, obrazek 1x i tak często jest blisko właściwego rozmiaru. Marnotrawstwo koncentruje się na mobile, gdzie viewport jest wąski, a gęstość wysoka. Jeśli testujesz tylko na desktopie, nigdy nie zobaczysz problemu.
 
-**Atrybut `sizes` sprawia wrażenie zbędnego.** Tag obrazka ma już atrybuty `width` i `height`. CSS już steruje rozmiarem wyświetlania. Wydaje się, że przeglądarka powinna umieć wywnioskować rozmiar wyświetlania z CSS. Ale nie może — wybór zasobu obrazkowego dzieje się, zanim CSS zostanie w pełni sparsowany, przez "preparser", który ma dostęp wyłącznie do atrybutów HTML. Atrybut `sizes` istnieje dokładnie dlatego, że informacja o layoucie z CSS nie jest dostępna w momencie wyboru obrazka.
+**Atrybut `sizes` sprawia wrażenie zbędnego.** Tag obrazka ma już atrybuty `width` i `height`. CSS już steruje rozmiarem wyświetlania. Wydaje się, że przeglądarka powinna umieć wywnioskować rozmiar wyświetlania z CSS. Ale nie może — wyboru zasobu obrazkowego dokonuje „preparser”, zanim CSS zostanie w pełni sparsowany — a ma on dostęp wyłącznie do atrybutów HTML. Atrybut `sizes` istnieje dokładnie dlatego, że informacja o layoucie z CSS nie jest dostępna w momencie wyboru obrazka.
 
 To jeden z tych przypadków, w których zrozumienie, *dlaczego* przeglądarka potrzebuje tej informacji, sprawia, że naprawa staje się oczywista. Przeglądarka próbuje zacząć pobierać obrazy najwcześniej, jak się da, jeszcze przed wyliczeniem layoutu. Robi ci przysługę, nie czekając na CSS. Ale ceną tej gorliwości jest to, że musisz jej powiedzieć, jak duży będzie obrazek, bo sama naprawdę nie jest w stanie tego jeszcze wywnioskować.
 
