@@ -26,7 +26,8 @@ const errors = []
 const warnings = []
 
 for (const f of enFiles) {
-  if (!plFiles.includes(f)) (strict ? errors : warnings).push(`Missing PL translation: ${plDir}/${f}`)
+  if (!plFiles.includes(f))
+    (strict ? errors : warnings).push(`Missing PL translation: ${plDir}/${f}`)
 }
 for (const f of plFiles) {
   if (!enFiles.includes(f)) errors.push(`PL file has no EN source: ${plDir}/${f}`)
@@ -51,7 +52,8 @@ for (const f of plFiles.filter((f) => enFiles.includes(f))) {
 
   if (!pl.data.title) errors.push(`${f}: PL frontmatter missing title`)
   if (!pl.data.summary) errors.push(`${f}: PL frontmatter missing summary`)
-  if (isoDate(en.data.date) !== isoDate(pl.data.date)) errors.push(`${f}: date differs between EN and PL`)
+  if (isoDate(en.data.date) !== isoDate(pl.data.date))
+    errors.push(`${f}: date differs between EN and PL`)
   if (JSON.stringify(en.data.tags ?? []) !== JSON.stringify(pl.data.tags ?? []))
     errors.push(`${f}: tags differ (tags must stay identical to EN)`)
   if (new Date(pl.data.date).getTime() > Date.now())

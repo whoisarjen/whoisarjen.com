@@ -49,12 +49,12 @@ async function generateRSSForLocale(config, posts, locale) {
   )
 
   for (const tag of Object.keys(tagData)) {
-    const filteredPosts = publishPosts.filter((post) =>
-      post.tags.map((t) => slug(t)).includes(tag)
-    )
+    const filteredPosts = publishPosts.filter((post) => post.tags.map((t) => slug(t)).includes(tag))
     if (filteredPosts.length === 0) continue
     const tagFeedPath =
-      locale === 'pl' ? path.join('pl', 'tags', tag, 'feed.xml') : path.join('tags', tag, 'feed.xml')
+      locale === 'pl'
+        ? path.join('pl', 'tags', tag, 'feed.xml')
+        : path.join('tags', tag, 'feed.xml')
     mkdirSync(path.dirname(path.join('public', tagFeedPath)), { recursive: true })
     writeFileSync(
       path.join('public', tagFeedPath),
@@ -64,8 +64,16 @@ async function generateRSSForLocale(config, posts, locale) {
 }
 
 const rss = () => {
-  generateRSSForLocale(siteMetadata, allBlogs.filter((p) => p.locale === 'en'), 'en')
-  generateRSSForLocale(siteMetadata, allBlogs.filter((p) => p.locale === 'pl'), 'pl')
+  generateRSSForLocale(
+    siteMetadata,
+    allBlogs.filter((p) => p.locale === 'en'),
+    'en'
+  )
+  generateRSSForLocale(
+    siteMetadata,
+    allBlogs.filter((p) => p.locale === 'pl'),
+    'pl'
+  )
   console.log('RSS feeds generated...')
 }
 export default rss
