@@ -1,7 +1,8 @@
 import Link from '@/components/Link'
 import siteMetadata from '@/data/siteMetadata'
 import { genPageMetadata } from 'app/seo'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { useTranslations } from 'next-intl'
 import { Metadata } from 'next'
 
 export async function generateMetadata({
@@ -9,57 +10,37 @@ export async function generateMetadata({
 }: {
   params: { locale: string }
 }): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: 'hire' })
   return genPageMetadata({
-    title: 'Hire Me',
-    description:
-      'Senior Full-Stack Engineer available for hire. Deep expertise in performance optimization, scalable architecture, and shipping production systems.',
+    title: t('metaTitle'),
+    description: t('metaDescription'),
     locale: params.locale,
     path: '/hire',
   })
 }
 
-const skills = [
-  {
-    title: 'Performance Engineering',
-    description:
-      'I optimize at every layer. Database queries, API payloads, frontend bundles, caching strategies.',
-  },
-  {
-    title: 'Scalable Architecture',
-    description:
-      'I design systems that handle growth. Multi-market platforms, internationalization, microservices.',
-  },
-  {
-    title: 'Full-Stack Delivery',
-    description:
-      'I ship end-to-end. From database schema to pixel-perfect UI. TypeScript, React, Vue, Node.js, PostgreSQL.',
-  },
-  {
-    title: 'Production Mindset',
-    description:
-      'I build for real users. Monitoring, error handling, graceful degradation, zero-downtime deployments.',
-  },
-]
-
-const metrics = [
-  { value: '-60%', label: 'API response size' },
-  { value: '6x', label: 'Cache capacity' },
-  { value: '+80%', label: 'Faster search' },
-  { value: '13', label: 'Languages served' },
-  { value: '15+', label: 'Projects shipped' },
-  { value: '26', label: 'Technical articles' },
-]
-
-const idealRoles = [
-  'Senior/Staff Full-Stack Engineer',
-  'Performance Engineer',
-  'Technical Lead',
-  'Engineering roles at product companies building at scale',
-  'Open to full-time, contract, and consulting',
-]
-
 export default function HirePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale)
+  const t = useTranslations('hire')
+
+  const skills = [
+    { title: t('skill1Title'), description: t('skill1Desc') },
+    { title: t('skill2Title'), description: t('skill2Desc') },
+    { title: t('skill3Title'), description: t('skill3Desc') },
+    { title: t('skill4Title'), description: t('skill4Desc') },
+  ]
+
+  const metrics = [
+    { value: '-60%', label: t('metric1') },
+    { value: '6x', label: t('metric2') },
+    { value: '+80%', label: t('metric3') },
+    { value: '13', label: t('metric4') },
+    { value: '15+', label: t('metric5') },
+    { value: '26', label: t('metric6') },
+  ]
+
+  const idealRoles = [t('role1'), t('role2'), t('role3'), t('role4'), t('role5')]
+
   return (
     <div className="space-y-0">
       {/* -- Header -- */}
@@ -80,22 +61,19 @@ export default function HirePage({ params }: { params: { locale: string } }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
             </span>
-            <span className="text-sm font-medium tracking-wide text-emerald-400">
-              Available for opportunities
-            </span>
+            <span className="text-sm font-medium tracking-wide text-emerald-400">{t('badge')}</span>
           </div>
 
           {/* Headline */}
           <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Let's work{' '}
+            {t('heroTitle1')}{' '}
             <span className="bg-gradient-to-r from-sky-400 to-sky-500 bg-clip-text text-transparent">
-              together
+              {t('heroTitle2')}
             </span>
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-gray-400">
-            I'm a Senior Full-Stack Engineer looking for my next challenge. I bring deep expertise
-            in performance optimization, scalable architecture, and shipping production systems.
+            {t('heroSubtitle')}
           </p>
 
           {/* CTA row */}
@@ -117,7 +95,7 @@ export default function HirePage({ params }: { params: { locale: string } }) {
                   d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                 />
               </svg>
-              Email me
+              {t('emailMe')}
             </Link>
             <Link
               href={siteMetadata.linkedin || '#'}
@@ -136,7 +114,7 @@ export default function HirePage({ params }: { params: { locale: string } }) {
       <section className="border-t border-gray-800 py-16 sm:py-20">
         <div className="mb-10">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            What I Bring
+            {t('whatIBring')}
           </h2>
         </div>
 
@@ -154,7 +132,7 @@ export default function HirePage({ params }: { params: { locale: string } }) {
       <section className="border-t border-gray-800 py-16 sm:py-20">
         <div className="mb-10">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            By the Numbers
+            {t('byTheNumbers')}
           </h2>
         </div>
 
@@ -174,7 +152,7 @@ export default function HirePage({ params }: { params: { locale: string } }) {
       <section className="border-t border-gray-800 py-16 sm:py-20">
         <div className="mb-10">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Ideal Roles
+            {t('idealRoles')}
           </h2>
         </div>
 
@@ -200,11 +178,9 @@ export default function HirePage({ params }: { params: { locale: string } }) {
       <section className="border-t border-gray-800 py-16 sm:py-20">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            Ready to talk?
+            {t('readyTitle')}
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-gray-400">
-            Let's discuss how I can contribute to your team and help build something great.
-          </p>
+          <p className="mx-auto mt-3 max-w-md text-gray-400">{t('readySubtitle')}</p>
           <div className="mt-8">
             <Link
               href={`mailto:${siteMetadata.email}`}
@@ -223,7 +199,7 @@ export default function HirePage({ params }: { params: { locale: string } }) {
                   d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                 />
               </svg>
-              Email me
+              {t('emailMe')}
             </Link>
           </div>
         </div>

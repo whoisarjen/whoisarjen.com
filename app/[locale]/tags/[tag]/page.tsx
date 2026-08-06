@@ -6,7 +6,7 @@ import { allBlogs } from 'contentlayer/generated'
 import tagData from 'app/tag-data.json'
 import { genPageMetadata } from 'app/seo'
 import { Metadata } from 'next'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 export async function generateMetadata({
   params,
@@ -14,9 +14,10 @@ export async function generateMetadata({
   params: { locale: string; tag: string }
 }): Promise<Metadata> {
   const tag = decodeURI(params.tag)
+  const t = await getTranslations({ locale: params.locale, namespace: 'tags' })
   return genPageMetadata({
     title: tag,
-    description: `${siteMetadata.title} ${tag} tagged content`,
+    description: t('tagDescription', { title: siteMetadata.title, tag }),
     locale: params.locale,
     path: `/tags/${tag}`,
     alternates: {

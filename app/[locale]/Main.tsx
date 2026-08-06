@@ -2,16 +2,10 @@ import Link from '@/components/Link'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
 import Image from '@/components/Image'
+import { useTranslations, useLocale } from 'next-intl'
 
 const MAX_POSTS_DISPLAY = 6
 const MAX_PROJECTS_DISPLAY = 9
-
-const metrics = [
-  { value: '-60%', label: 'API response size', detail: 'Smart object mapping' },
-  { value: '6x', label: 'Cache capacity', detail: 'gzip on 1GB servers' },
-  { value: '+80%', label: 'Faster search', detail: 'PostgreSQL CTE tuning' },
-  { value: '13', label: 'Languages served', detail: 'Multi-market e-commerce' },
-]
 
 const techStack = [
   'TypeScript',
@@ -27,6 +21,16 @@ const techStack = [
 ]
 
 export default function Home({ posts, projects }) {
+  const t = useTranslations('home')
+  const locale = useLocale()
+
+  const metrics = [
+    { value: '-60%', label: t('metricApiLabel'), detail: t('metricApiDetail') },
+    { value: '6x', label: t('metricCacheLabel'), detail: t('metricCacheDetail') },
+    { value: '+80%', label: t('metricSearchLabel'), detail: t('metricSearchDetail') },
+    { value: '13', label: t('metricLangsLabel'), detail: t('metricLangsDetail') },
+  ]
+
   return (
     <div className="space-y-0">
       {/* ── Hero ─────────────────────────────────────────────────── */}
@@ -47,24 +51,20 @@ export default function Home({ posts, projects }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
             </span>
-            <span className="text-sm font-medium tracking-wide text-emerald-400">
-              Available for opportunities
-            </span>
+            <span className="text-sm font-medium tracking-wide text-emerald-400">{t('badge')}</span>
           </div>
 
           {/* Headline block */}
           <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-            I build high-performance
+            {t('heroLine1')}
             <br />
             <span className="bg-gradient-to-r from-sky-400 to-sky-500 bg-clip-text text-transparent">
-              systems that scale
+              {t('heroLine2')}
             </span>
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-gray-400">
-            Senior Full-Stack Engineer specializing in multi-market e-commerce, performance
-            optimization, and scalable architecture. Proven track record shipping high-traffic
-            platforms across international markets.
+            {t('heroSubtitle')}
           </p>
 
           {/* CTA row */}
@@ -73,7 +73,7 @@ export default function Home({ posts, projects }) {
               href="#work"
               className="inline-flex items-center rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-100"
             >
-              View my work
+              {t('viewMyWork')}
               <svg
                 className="ml-2 h-4 w-4"
                 fill="none"
@@ -88,7 +88,7 @@ export default function Home({ posts, projects }) {
               href={`mailto:${siteMetadata.email}`}
               className="inline-flex items-center rounded-lg border border-gray-700 bg-gray-900 px-5 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-gray-800"
             >
-              Get in touch
+              {t('getInTouch')}
               <svg
                 className="ml-2 h-4 w-4"
                 fill="none"
@@ -160,16 +160,13 @@ export default function Home({ posts, projects }) {
       <section id="work" className="py-16 sm:py-20">
         <div className="mb-10">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Featured Work
+            {t('featuredTitle')}
           </h2>
-          <p className="mt-2 text-gray-400">
-            Production systems serving real users - from multi-market e-commerce to open-source
-            developer tools.
-          </p>
+          <p className="mt-2 text-gray-400">{t('featuredSubtitle')}</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.length === 0 && <p className="text-gray-400">No projects found.</p>}
+          {projects.length === 0 && <p className="text-gray-400">{t('noProjects')}</p>}
           {projects.slice(0, MAX_PROJECTS_DISPLAY).map((project) => (
             <Link
               key={project.title}
@@ -203,7 +200,7 @@ export default function Home({ posts, projects }) {
               href="/projects"
               className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-6 py-3 text-sm font-semibold text-gray-300 transition-colors hover:border-gray-600 hover:bg-gray-800 hover:text-white"
             >
-              View all {projects.length} projects
+              {t('viewAllProjects', { count: projects.length })}
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -227,22 +224,20 @@ export default function Home({ posts, projects }) {
         <div className="mb-10 flex items-end justify-between">
           <div>
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Engineering Blog
+              {t('blogTitle')}
             </h2>
-            <p className="mt-2 text-gray-400">
-              Deep-dives into performance, architecture, and real production challenges.
-            </p>
+            <p className="mt-2 text-gray-400">{t('blogSubtitle')}</p>
           </div>
           <Link
             href="/blog"
             className="hidden text-sm font-semibold text-sky-500 hover:text-sky-400 sm:block"
           >
-            All posts &rarr;
+            {t('allPosts')} &rarr;
           </Link>
         </div>
 
         <div className="divide-y divide-gray-800">
-          {!posts.length && <p>No posts found.</p>}
+          {!posts.length && <p>{t('noPosts')}</p>}
           {posts.slice(0, MAX_POSTS_DISPLAY).map((post) => {
             const { slug, date, title, summary } = post
             return (
@@ -250,7 +245,7 @@ export default function Home({ posts, projects }) {
                 <Link href={`/blog/${slug}`} className="block">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-6">
                     <time dateTime={date} className="shrink-0 text-sm tabular-nums text-gray-400">
-                      {formatDate(date, siteMetadata.locale)}
+                      {formatDate(date, locale === 'pl' ? 'pl-PL' : 'en-US')}
                     </time>
                     <div className="min-w-0 flex-1">
                       <h3 className="text-lg font-semibold text-gray-100 group-hover:text-sky-400">
@@ -280,7 +275,7 @@ export default function Home({ posts, projects }) {
 
         <div className="mt-6 sm:hidden">
           <Link href="/blog" className="text-sm font-semibold text-sky-500 hover:text-sky-400">
-            All posts &rarr;
+            {t('allPosts')} &rarr;
           </Link>
         </div>
       </section>
@@ -289,12 +284,9 @@ export default function Home({ posts, projects }) {
       <section className="border-t border-gray-800 py-16 sm:py-20">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            Let's build something together
+            {t('ctaTitle')}
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-gray-400">
-            I'm open to full-time roles, contract work, and interesting collaborations. Let's talk
-            about what I can bring to your team.
-          </p>
+          <p className="mx-auto mt-3 max-w-md text-gray-400">{t('ctaSubtitle')}</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href={`mailto:${siteMetadata.email}`}
@@ -313,7 +305,7 @@ export default function Home({ posts, projects }) {
                   d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                 />
               </svg>
-              Email me
+              {t('emailMe')}
             </Link>
             <Link
               href={siteMetadata.linkedin || '#'}

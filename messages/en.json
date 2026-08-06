@@ -92,7 +92,8 @@
   "tags": {
     "title": "Tags",
     "description": "Things I blog about",
-    "noTags": "No tags found."
+    "noTags": "No tags found.",
+    "tagDescription": "{title} — content tagged {tag}"
   },
   "about": {
     "title": "About"

@@ -92,7 +92,8 @@
   "tags": {
     "title": "Tagi",
     "description": "Tematy, o których piszę",
-    "noTags": "Nie znaleziono tagów."
+    "noTags": "Nie znaleziono tagów.",
+    "tagDescription": "{title} — wpisy z tagiem {tag}"
   },
   "about": {
     "title": "O mnie"
