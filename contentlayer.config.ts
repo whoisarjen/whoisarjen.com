@@ -161,6 +161,40 @@ export const Authors = defineDocumentType(() => ({
   computedFields,
 }))
 
+/**
+ * Big-bang i18n gate: production builds fail unless every non-draft EN post
+ * has a PL twin (and vice versa) with byte-identical code blocks.
+ * Dev builds skip this so translation work can proceed incrementally.
+ */
+function assertI18nParity(allBlogs) {
+  if (!isProduction) return
+  const en = allBlogs.filter((b) => b.locale === 'en' && b.draft !== true)
+  const pl = allBlogs.filter((b) => b.locale === 'pl' && b.draft !== true)
+  const enSlugs = new Set(en.map((b) => b.slug))
+  const plSlugs = new Set(pl.map((b) => b.slug))
+  const problems: string[] = []
+  for (const b of en) if (!plSlugs.has(b.slug)) problems.push(`Missing PL translation for: ${b.slug}`)
+  for (const b of pl) if (!enSlugs.has(b.slug)) problems.push(`PL post has no EN source: ${b.slug}`)
+  const fences = (raw: string) => raw.match(/```[\s\S]*?```/g) ?? []
+  for (const enPost of en) {
+    const plPost = pl.find((b) => b.slug === enPost.slug)
+    if (!plPost) continue
+    const enF = fences(enPost.body.raw)
+    const plF = fences(plPost.body.raw)
+    if (enF.length !== plF.length) {
+      problems.push(`${enPost.slug}: code block count differs (EN ${enF.length} vs PL ${plF.length})`)
+    } else {
+      enF.forEach((fence, i) => {
+        if (fence !== plF[i]) problems.push(`${enPost.slug}: code block #${i + 1} differs between EN and PL`)
+      })
+    }
+  }
+  if (problems.length > 0) {
+    throw new Error(`i18n parity check failed:\n${problems.map((p) => `  - ${p}`).join('\n')}`)
+  }
+  console.log('i18n parity check passed.')
+}
+
 export default makeSource({
   contentDirPath: 'data',
   documentTypes: [Blog, Authors],
@@ -193,6 +227,7 @@ export default makeSource({
   },
   onSuccess: async (importData) => {
     const { allBlogs } = await importData()
+    assertI18nParity(allBlogs)
     createTagCount(allBlogs)
     createSearchIndex(allBlogs)
   },
