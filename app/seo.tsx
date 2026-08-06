@@ -24,7 +24,9 @@ export function genPageMetadata({
   const { alternates: extraAlternates, ...restProps } = rest
   return {
     title,
-    description: description || siteMetadata.description,
+    // Omit the key entirely when the caller has none, so the locale-aware
+    // description from the layout is inherited instead of overridden.
+    ...(description ? { description } : {}),
     openGraph: {
       title: `${title} | ${siteMetadata.title}`,
       description: description || siteMetadata.description,
