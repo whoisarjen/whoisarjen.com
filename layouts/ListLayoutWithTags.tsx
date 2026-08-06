@@ -1,14 +1,14 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname } from 'i18n/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
 import Link from '@/components/Link'
 import Tag from '@/components/Tag'
-import siteMetadata from '@/data/siteMetadata'
 import tagData from 'app/tag-data.json'
 
 interface PaginationProps {
@@ -24,6 +24,7 @@ interface ListLayoutProps {
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
   const pathname = usePathname()
+  const t = useTranslations('blog')
   const basePath = pathname.split('/')[1]
   const prevPage = currentPage - 1 > 0
   const nextPage = currentPage + 1 <= totalPages
@@ -33,7 +34,7 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
       <nav className="flex justify-between">
         {!prevPage && (
           <button className="cursor-auto disabled:opacity-50" disabled={!prevPage}>
-            Previous
+            {t('previous')}
           </button>
         )}
         {prevPage && (
@@ -41,20 +42,18 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
             href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
             rel="prev"
           >
-            Previous
+            {t('previous')}
           </Link>
         )}
-        <span>
-          {currentPage} of {totalPages}
-        </span>
+        <span>{t('pageOf', { current: currentPage, total: totalPages })}</span>
         {!nextPage && (
           <button className="cursor-auto disabled:opacity-50" disabled={!nextPage}>
-            Next
+            {t('next')}
           </button>
         )}
         {nextPage && (
           <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
-            Next
+            {t('next')}
           </Link>
         )}
       </nav>
@@ -69,6 +68,8 @@ export default function ListLayoutWithTags({
   pagination,
 }: ListLayoutProps) {
   const pathname = usePathname()
+  const t = useTranslations('blog')
+  const locale = useLocale()
   const tagCounts = tagData as Record<string, number>
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
@@ -87,30 +88,30 @@ export default function ListLayoutWithTags({
           <div className="hidden h-full max-h-screen min-w-[280px] max-w-[280px] flex-wrap overflow-auto rounded bg-gray-900/70 pt-5 shadow-md shadow-gray-800/40 sm:flex">
             <div className="px-6 py-4">
               {pathname.startsWith('/blog') ? (
-                <h3 className="font-bold uppercase text-sky-500">All Posts</h3>
+                <h3 className="font-bold uppercase text-sky-500">{t('allPosts')}</h3>
               ) : (
                 <Link
                   href={`/blog`}
                   className="font-bold uppercase text-gray-300 hover:text-sky-500"
                 >
-                  All Posts
+                  {t('allPosts')}
                 </Link>
               )}
               <ul>
-                {sortedTags.map((t) => {
+                {sortedTags.map((t2) => {
                   return (
-                    <li key={t} className="my-3">
-                      {pathname.split('/tags/')[1] === slug(t) ? (
+                    <li key={t2} className="my-3">
+                      {pathname.split('/tags/')[1] === slug(t2) ? (
                         <h3 className="inline px-3 py-2 text-sm font-bold uppercase text-sky-500">
-                          {`${t} (${tagCounts[t]})`}
+                          {`${t2} (${tagCounts[t2]})`}
                         </h3>
                       ) : (
                         <Link
-                          href={`/tags/${slug(t)}`}
+                          href={`/tags/${slug(t2)}`}
                           className="px-3 py-2 text-sm font-medium uppercase text-gray-300 hover:text-sky-500"
-                          aria-label={`View posts tagged ${t}`}
+                          aria-label={t('viewPostsTagged', { tag: t2 })}
                         >
-                          {`${t} (${tagCounts[t]})`}
+                          {`${t2} (${tagCounts[t2]})`}
                         </Link>
                       )}
                     </li>
@@ -127,9 +128,11 @@ export default function ListLayoutWithTags({
                   <li key={path} className="py-5">
                     <article className="flex flex-col space-y-2 xl:space-y-0">
                       <dl>
-                        <dt className="sr-only">Published on</dt>
+                        <dt className="sr-only">{t('publishedOn')}</dt>
                         <dd className="text-base font-medium leading-6 text-gray-400">
-                          <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                          <time dateTime={date}>
+                            {formatDate(date, locale === 'pl' ? 'pl-PL' : 'en-US')}
+                          </time>
                         </dd>
                       </dl>
                       <div className="space-y-3">
