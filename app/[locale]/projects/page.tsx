@@ -17,7 +17,7 @@ export async function generateMetadata({
 export default async function Projects({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale)
   const t = await getTranslations('projects')
-  const projectsData = await getProjects()
+  const projectsData = await getProjects(params.locale)
 
   return (
     <div>

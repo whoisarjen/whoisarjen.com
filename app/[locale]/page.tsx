@@ -10,7 +10,7 @@ export const revalidate = 86400 // 1 day
 export default async function Page({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale)
   const posts = getPostsByLocale(params.locale).slice(0, siteMetadata.postsPerPage)
-  const projects = await getProjects()
+  const projects = await getProjects(params.locale)
   return (
     <>
       <Main posts={posts} projects={projects} />
