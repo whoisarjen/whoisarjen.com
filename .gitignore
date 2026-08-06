@@ -8,12 +8,14 @@
 !/.yarn/releases
 !/.yarn/plugins
 !/.yarn/sdks
+!/.yarn/patches
 
 # testing
 /coverage
 
 # next.js
 /.next/
+.next-build
 /out/
 public/sitemap.xml
 .vercel
@@ -47,3 +49,7 @@ yarn-error.log*
 # Contentlayer
 .contentlayer
 .env*.local
+.yarn-global
+node_modules.root-owned
+.next.root-owned
+.contentlayer.root-owned

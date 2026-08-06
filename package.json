@@ -25,6 +25,7 @@
     "image-size": "1.0.0",
     "next": "14.2.3",
     "next-contentlayer2": "0.4.6",
+    "next-intl": "^3.26.5",
     "next-themes": "^0.3.0",
     "pliny": "0.2.1",
     "postcss": "^8.4.24",
@@ -71,5 +72,8 @@
   "packageManager": "yarn@3.6.1",
   "engines": {
     "node": "20.x"
+  },
+  "resolutions": {
+    "@contentlayer2/core@0.4.3": "patch:@contentlayer2/core@npm%3A0.4.3#./.yarn/patches/@contentlayer2-core-npm-0.4.3-0ed3ef3bf8.patch"
   }
 }

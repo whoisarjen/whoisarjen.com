@@ -1,0 +1,108 @@
+{
+  "nav": {
+    "home": "Home",
+    "blog": "Blog",
+    "projects": "Projects",
+    "hire": "Hire",
+    "about": "About"
+  },
+  "common": {
+    "search": "Search",
+    "toggleMenu": "Toggle Menu"
+  },
+  "home": {
+    "badge": "Available for opportunities",
+    "heroLine1": "I build high-performance",
+    "heroLine2": "systems that scale",
+    "heroSubtitle": "Senior Full-Stack Engineer specializing in multi-market e-commerce, performance optimization, and scalable architecture. Proven track record shipping high-traffic platforms across international markets.",
+    "viewMyWork": "View my work",
+    "getInTouch": "Get in touch",
+    "metricApiLabel": "API response size",
+    "metricApiDetail": "Smart object mapping",
+    "metricCacheLabel": "Cache capacity",
+    "metricCacheDetail": "gzip on 1GB servers",
+    "metricSearchLabel": "Faster search",
+    "metricSearchDetail": "PostgreSQL CTE tuning",
+    "metricLangsLabel": "Languages served",
+    "metricLangsDetail": "Multi-market e-commerce",
+    "featuredTitle": "Featured Work",
+    "featuredSubtitle": "Production systems serving real users - from multi-market e-commerce to open-source developer tools.",
+    "noProjects": "No projects found.",
+    "viewAllProjects": "View all {count} projects",
+    "blogTitle": "Engineering Blog",
+    "blogSubtitle": "Deep-dives into performance, architecture, and real production challenges.",
+    "allPosts": "All posts",
+    "noPosts": "No posts found.",
+    "ctaTitle": "Let's build something together",
+    "ctaSubtitle": "I'm open to full-time roles, contract work, and interesting collaborations. Let's talk about what I can bring to your team.",
+    "emailMe": "Email me"
+  },
+  "hire": {
+    "metaTitle": "Hire Me",
+    "metaDescription": "Senior Full-Stack Engineer available for hire. Deep expertise in performance optimization, scalable architecture, and shipping production systems.",
+    "badge": "Available for opportunities",
+    "heroTitle1": "Let's work",
+    "heroTitle2": "together",
+    "heroSubtitle": "I'm a Senior Full-Stack Engineer looking for my next challenge. I bring deep expertise in performance optimization, scalable architecture, and shipping production systems.",
+    "emailMe": "Email me",
+    "whatIBring": "What I Bring",
+    "skill1Title": "Performance Engineering",
+    "skill1Desc": "I optimize at every layer. Database queries, API payloads, frontend bundles, caching strategies.",
+    "skill2Title": "Scalable Architecture",
+    "skill2Desc": "I design systems that handle growth. Multi-market platforms, internationalization, microservices.",
+    "skill3Title": "Full-Stack Delivery",
+    "skill3Desc": "I ship end-to-end. From database schema to pixel-perfect UI. TypeScript, React, Vue, Node.js, PostgreSQL.",
+    "skill4Title": "Production Mindset",
+    "skill4Desc": "I build for real users. Monitoring, error handling, graceful degradation, zero-downtime deployments.",
+    "byTheNumbers": "By the Numbers",
+    "metric1": "API response size",
+    "metric2": "Cache capacity",
+    "metric3": "Faster search",
+    "metric4": "Languages served",
+    "metric5": "Projects shipped",
+    "metric6": "Technical articles",
+    "idealRoles": "Ideal Roles",
+    "role1": "Senior/Staff Full-Stack Engineer",
+    "role2": "Performance Engineer",
+    "role3": "Technical Lead",
+    "role4": "Engineering roles at product companies building at scale",
+    "role5": "Open to full-time, contract, and consulting",
+    "readyTitle": "Ready to talk?",
+    "readySubtitle": "Let's discuss how I can contribute to your team and help build something great."
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Production systems, open-source tools, and side projects I've built."
+  },
+  "blog": {
+    "allPosts": "All Posts",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "{current} of {total}",
+    "publishedOn": "Published on",
+    "authors": "Authors",
+    "name": "Name",
+    "tags": "Tags",
+    "previousArticle": "Previous Article",
+    "nextArticle": "Next Article",
+    "backToBlog": "Back to the blog",
+    "viewOnGitHub": "View on GitHub",
+    "viewPostsTagged": "View posts tagged {tag}"
+  },
+  "tags": {
+    "title": "Tags",
+    "description": "Things I blog about",
+    "noTags": "No tags found."
+  },
+  "about": {
+    "title": "About"
+  },
+  "notFound": {
+    "heading": "Sorry we couldn't find this page.",
+    "body": "But dont worry, you can find plenty of other things on our homepage.",
+    "back": "Back to homepage"
+  },
+  "metadata": {
+    "description": "Senior Full-Stack Engineer specializing in high-performance e-commerce, scalable architecture, and performance optimization. TypeScript, React, Next.js, Vue, Nuxt, PostgreSQL, Redis."
+  }
+}

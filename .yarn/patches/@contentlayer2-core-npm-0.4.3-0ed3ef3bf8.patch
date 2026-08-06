@@ -1,0 +1,13 @@
+diff --git a/dist/generation/generate-dotpkg.js b/dist/generation/generate-dotpkg.js
+index 4d4fedd4b44677599ea2cd28df8f96e74be9037e..4f7c591a8c8b30501037499dfc47a4a0195ee946 100644
+--- a/dist/generation/generate-dotpkg.js
++++ b/dist/generation/generate-dotpkg.js
+@@ -46,7 +46,7 @@ const writeFilesForCache = ({ config, cache, schemaDef, targetPath, generationOp
+     const [nodeVersionMajor, nodeVersionMinor] = yield* $(T.succeedWith(() => process.versions.node.split('.').map((_) => parseInt(_, 10))));
+     // NOTE Type assert statements for `.json` files are neccessary from Node v16.14 onwards
+     const needsJsonAssertStatement = nodeVersionMajor > 16 || (nodeVersionMajor === 16 && nodeVersionMinor >= 14);
+-    const assertStatement = needsJsonAssertStatement ? ` assert { type: 'json' }` : '';
++    const assertStatement = needsJsonAssertStatement ? ` with { type: 'json' }` : '';
+     const typeNameField = generationOptions.options.fieldOptions.typeFieldName;
+     const dataBarrelFiles = documentDefs.map((docDef) => ({
+         content: makeDataExportFile({
