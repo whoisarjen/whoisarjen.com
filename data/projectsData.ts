@@ -55,7 +55,8 @@ const overrides: Record<string, Partial<Project>> = {
   },
   Riftlens: {
     title: 'RiftLens',
-    descriptionPl: 'Otwartoźródłowa platforma analityczna League of Legends — głęboki wgląd w Rift.',
+    descriptionPl:
+      'Otwartoźródłowa platforma analityczna League of Legends — głęboki wgląd w Rift.',
     href: 'https://riftlens.whoisarjen.com',
     imgSrc: '/static/images/projects/project-riftlens.png',
     techStack: ['Next.js', 'TypeScript'],
