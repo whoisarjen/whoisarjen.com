@@ -41,13 +41,17 @@ const icon = fromHtmlIsomorphic(
 
 const computedFields: ComputedFields = {
   readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+  locale: {
+    type: 'string',
+    resolve: (doc) => (doc._raw.flattenedPath.split('/')[1] === 'pl' ? 'pl' : 'en'),
+  },
   slug: {
     type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?\//, '').replace(/^pl\//, ''),
   },
   path: {
     type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath,
+    resolve: (doc) => doc._raw.flattenedPath.replace(/^(blog|authors)\/pl\//, '$1/'),
   },
   filePath: {
     type: 'string',
@@ -62,7 +66,7 @@ const computedFields: ComputedFields = {
 function createTagCount(allBlogs) {
   const tagCount: Record<string, number> = {}
   allBlogs.forEach((file) => {
-    if (file.tags && (!isProduction || file.draft !== true)) {
+    if (file.locale === 'en' && file.tags && (!isProduction || file.draft !== true)) {
       file.tags.forEach((tag) => {
         const formattedTag = slug(tag)
         if (formattedTag in tagCount) {
@@ -81,11 +85,20 @@ function createSearchIndex(allBlogs) {
     siteMetadata?.search?.provider === 'kbar' &&
     siteMetadata.search.kbarConfig.searchDocumentsPath
   ) {
+    const enBlogs = allBlogs.filter((b) => b.locale === 'en')
+    const plBlogs = allBlogs.filter((b) => b.locale === 'pl')
     writeFileSync(
       `public/${siteMetadata.search.kbarConfig.searchDocumentsPath}`,
-      JSON.stringify(allCoreContent(sortPosts(allBlogs)))
+      JSON.stringify(allCoreContent(sortPosts(enBlogs)))
     )
-    console.log('Local search index generated...')
+    // kbar navigates via router.push(doc.path), which is not locale-aware —
+    // so the PL index carries pl-prefixed paths.
+    const plDocs = allCoreContent(sortPosts(plBlogs)).map((doc) => ({
+      ...doc,
+      path: `pl/${doc.path}`,
+    }))
+    writeFileSync('public/search-pl.json', JSON.stringify(plDocs))
+    console.log('Local search indexes generated...')
   }
 }
 
@@ -110,16 +123,21 @@ export const Blog = defineDocumentType(() => ({
     ...computedFields,
     structuredData: {
       type: 'json',
-      resolve: (doc) => ({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: doc.title,
-        datePublished: doc.date,
-        dateModified: doc.lastmod || doc.date,
-        description: doc.summary,
-        image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
-        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
-      }),
+      resolve: (doc) => {
+        const isPl = doc._raw.flattenedPath.startsWith('blog/pl/')
+        const slug = doc._raw.flattenedPath.replace(/^blog\/(pl\/)?/, '')
+        return {
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: doc.title,
+          datePublished: doc.date,
+          dateModified: doc.lastmod || doc.date,
+          description: doc.summary,
+          inLanguage: isPl ? 'pl-PL' : 'en-US',
+          image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
+          url: `${siteMetadata.siteUrl}${isPl ? '/pl' : ''}/blog/${slug}`,
+        }
+      },
     },
   },
 }))
