@@ -38,7 +38,10 @@ if (strict && !fs.existsSync('data/authors/pl/default.mdx')) {
 
 const extractFences = (content) => content.match(/```[\s\S]*?```/g) ?? []
 const stripCode = (content) =>
-  content.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '')
+  content
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`\n]*`/g, '')
+    .replace(/^\s*>\s?/gm, '')
 
 const isoDate = (d) => (d instanceof Date ? d.toISOString() : String(d))
 
