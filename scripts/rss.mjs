@@ -7,11 +7,11 @@ import tagData from '../app/tag-data.json' with { type: 'json' }
 import { allBlogs } from '../.contentlayer/generated/index.mjs'
 import { sortPosts } from 'pliny/utils/contentlayer.js'
 
-const generateRssItem = (config, post) => `
+const generateRssItem = (config, post, localePrefix) => `
   <item>
-    <guid>${config.siteUrl}/blog/${post.slug}</guid>
+    <guid>${config.siteUrl}${localePrefix}/blog/${post.slug}</guid>
     <title>${escape(post.title)}</title>
-    <link>${config.siteUrl}/blog/${post.slug}</link>
+    <link>${config.siteUrl}${localePrefix}/blog/${post.slug}</link>
     ${post.summary && `<description>${escape(post.summary)}</description>`}
     <pubDate>${new Date(post.date).toUTCString()}</pubDate>
     <author>${config.email} (${config.author})</author>
@@ -19,43 +19,53 @@ const generateRssItem = (config, post) => `
   </item>
 `
 
-const generateRss = (config, posts, page = 'feed.xml') => `
+const generateRss = (config, posts, page, localePrefix, language) => `
   <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
       <title>${escape(config.title)}</title>
-      <link>${config.siteUrl}/blog</link>
+      <link>${config.siteUrl}${localePrefix}/blog</link>
       <description>${escape(config.description)}</description>
-      <language>${config.language}</language>
+      <language>${language}</language>
       <managingEditor>${config.email} (${config.author})</managingEditor>
       <webMaster>${config.email} (${config.author})</webMaster>
       <lastBuildDate>${new Date(posts[0].date).toUTCString()}</lastBuildDate>
       <atom:link href="${config.siteUrl}/${page}" rel="self" type="application/rss+xml"/>
-      ${posts.map((post) => generateRssItem(config, post)).join('')}
+      ${posts.map((post) => generateRssItem(config, post, localePrefix)).join('')}
     </channel>
   </rss>
 `
 
-async function generateRSS(config, allBlogs, page = 'feed.xml') {
-  const publishPosts = allBlogs.filter((post) => post.draft !== true)
-  // RSS for blog post
-  if (publishPosts.length > 0) {
-    const rss = generateRss(config, sortPosts(publishPosts))
-    writeFileSync(`./public/${page}`, rss)
-  }
+async function generateRSSForLocale(config, posts, locale) {
+  const localePrefix = locale === 'pl' ? '/pl' : ''
+  const language = locale === 'pl' ? 'pl' : config.language
+  const publishPosts = posts.filter((post) => post.draft !== true)
+  if (publishPosts.length === 0) return
 
-  if (publishPosts.length > 0) {
-    for (const tag of Object.keys(tagData)) {
-      const filteredPosts = allBlogs.filter((post) => post.tags.map((t) => slug(t)).includes(tag))
-      const rss = generateRss(config, filteredPosts, `tags/${tag}/${page}`)
-      const rssPath = path.join('public', 'tags', tag)
-      mkdirSync(rssPath, { recursive: true })
-      writeFileSync(path.join(rssPath, page), rss)
-    }
+  const feedPath = locale === 'pl' ? 'pl/feed.xml' : 'feed.xml'
+  mkdirSync(path.dirname(path.join('public', feedPath)), { recursive: true })
+  writeFileSync(
+    path.join('public', feedPath),
+    generateRss(config, sortPosts(publishPosts), feedPath, localePrefix, language)
+  )
+
+  for (const tag of Object.keys(tagData)) {
+    const filteredPosts = publishPosts.filter((post) =>
+      post.tags.map((t) => slug(t)).includes(tag)
+    )
+    if (filteredPosts.length === 0) continue
+    const tagFeedPath =
+      locale === 'pl' ? path.join('pl', 'tags', tag, 'feed.xml') : path.join('tags', tag, 'feed.xml')
+    mkdirSync(path.dirname(path.join('public', tagFeedPath)), { recursive: true })
+    writeFileSync(
+      path.join('public', tagFeedPath),
+      generateRss(config, filteredPosts, tagFeedPath, localePrefix, language)
+    )
   }
 }
 
 const rss = () => {
-  generateRSS(siteMetadata, allBlogs)
-  console.log('RSS feed generated...')
+  generateRSSForLocale(siteMetadata, allBlogs.filter((p) => p.locale === 'en'), 'en')
+  generateRSSForLocale(siteMetadata, allBlogs.filter((p) => p.locale === 'pl'), 'pl')
+  console.log('RSS feeds generated...')
 }
 export default rss
