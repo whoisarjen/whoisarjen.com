@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog, Authors } from 'contentlayer/generated'
 import Link from '@/components/Link'
@@ -27,7 +28,9 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, next, prev, children }: LayoutProps) {
-  const { filePath, path, slug, date, title, tags } = content
+  const t = useTranslations('blog')
+  const locale = useLocale()
+  const { filePath, path, date, title, tags } = content
   const basePath = path.split('/')[0]
 
   return (
@@ -39,10 +42,13 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
             <div className="space-y-1 text-center">
               <dl className="space-y-10">
                 <div>
-                  <dt className="sr-only">Published on</dt>
+                  <dt className="sr-only">{t('publishedOn')}</dt>
                   <dd className="text-base font-medium leading-6 text-gray-400">
                     <time dateTime={date}>
-                      {new Date(date).toLocaleDateString(siteMetadata.locale, postDateTemplate)}
+                      {new Date(date).toLocaleDateString(
+                        locale === 'pl' ? 'pl-PL' : 'en-US',
+                        postDateTemplate
+                      )}
                     </time>
                   </dd>
                 </div>
@@ -54,7 +60,7 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
           </header>
           <div className="grid-rows-[auto_1fr] divide-y divide-gray-700 pb-8 xl:grid xl:grid-cols-4 xl:gap-x-6 xl:divide-y-0">
             <dl className="pb-10 pt-6 xl:border-b xl:border-gray-700 xl:pt-11">
-              <dt className="sr-only">Authors</dt>
+              <dt className="sr-only">{t('authors')}</dt>
               <dd>
                 <ul className="flex flex-wrap justify-center gap-4 sm:space-x-12 xl:block xl:space-x-0 xl:space-y-8">
                   <li className="flex items-center space-x-2" key={siteMetadata.author}>
@@ -69,7 +75,7 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
                     )}
                     <div className="flex flex-col gap-2">
                       <dl className="whitespace-nowrap text-sm font-medium leading-5">
-                        <dt className="sr-only">Name</dt>
+                        <dt className="sr-only">{t('name')}</dt>
                         <dd className="text-gray-100">{siteMetadata.author}</dd>
                       </dl>
                       <div className="flex space-x-2">
@@ -85,14 +91,14 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
             <div className="divide-y divide-gray-700 xl:col-span-3 xl:row-span-2 xl:pb-0">
               <div className="prose prose-invert max-w-none pb-8 pt-10">{children}</div>
               <div className="pb-6 pt-6 text-sm text-gray-300">
-                <Link href={editUrl(filePath)}>View on GitHub</Link>
+                <Link href={editUrl(filePath)}>{t('viewOnGitHub')}</Link>
               </div>
             </div>
             <footer>
               <div className="divide-gray-700 text-sm font-medium leading-5 xl:col-start-1 xl:row-start-2 xl:divide-y">
                 {tags && (
                   <div className="py-4 xl:py-8">
-                    <h2 className="text-xs uppercase tracking-wide text-gray-400">Tags</h2>
+                    <h2 className="text-xs uppercase tracking-wide text-gray-400">{t('tags')}</h2>
                     <div className="flex flex-wrap">
                       {tags.map((tag) => (
                         <Tag key={tag} text={tag} />
@@ -105,7 +111,7 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
                     {prev && prev.path && (
                       <div>
                         <h2 className="text-xs uppercase tracking-wide text-gray-400">
-                          Previous Article
+                          {t('previousArticle')}
                         </h2>
                         <div className="text-sky-500 hover:text-sky-400">
                           <Link href={`/${prev.path}`}>{prev.title}</Link>
@@ -115,7 +121,7 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
                     {next && next.path && (
                       <div>
                         <h2 className="text-xs uppercase tracking-wide text-gray-400">
-                          Next Article
+                          {t('nextArticle')}
                         </h2>
                         <div className="text-sky-500 hover:text-sky-400">
                           <Link href={`/${next.path}`}>{next.title}</Link>
@@ -129,9 +135,9 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
                 <Link
                   href={`/${basePath}`}
                   className="text-sky-500 hover:text-sky-400"
-                  aria-label="Back to the blog"
+                  aria-label={t('backToBlog')}
                 >
-                  &larr; Back to the blog
+                  &larr; {t('backToBlog')}
                 </Link>
               </div>
             </footer>
