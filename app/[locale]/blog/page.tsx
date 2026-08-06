@@ -1,13 +1,22 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer'
-import { allBlogs } from 'contentlayer/generated'
 import { genPageMetadata } from 'app/seo'
 import siteMetadata from '@/data/siteMetadata'
+import { getPostsByLocale } from '@/lib/posts'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { Metadata } from 'next'
 
-export const metadata = genPageMetadata({ title: 'Blog' })
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string }
+}): Promise<Metadata> {
+  return genPageMetadata({ title: 'Blog', locale: params.locale, path: '/blog' })
+}
 
-export default function BlogPage() {
-  const posts = allCoreContent(sortPosts(allBlogs))
+export default async function BlogPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale)
+  const t = await getTranslations('blog')
+  const posts = getPostsByLocale(params.locale)
   const pageNumber = 1
   const initialDisplayPosts = posts.slice(
     siteMetadata.postsPerPage * (pageNumber - 1),
@@ -23,7 +32,7 @@ export default function BlogPage() {
       posts={posts}
       initialDisplayPosts={initialDisplayPosts}
       pagination={pagination}
-      title="All Posts"
+      title={t('allPosts')}
     />
   )
 }

@@ -4,7 +4,7 @@ import 'katex/dist/katex.css'
 import PageTitle from '@/components/PageTitle'
 import { components } from '@/components/MDXComponents'
 import { MDXLayoutRenderer } from 'pliny/mdx-components'
-import { sortPosts, coreContent, allCoreContent } from 'pliny/utils/contentlayer'
+import { coreContent } from 'pliny/utils/contentlayer'
 import { allBlogs, allAuthors } from 'contentlayer/generated'
 import type { Authors, Blog } from 'contentlayer/generated'
 import PostSimple from '@/layouts/PostSimple'
@@ -13,6 +13,8 @@ import PostBanner from '@/layouts/PostBanner'
 import { Metadata } from 'next'
 import siteMetadata from '@/data/siteMetadata'
 import { notFound } from 'next/navigation'
+import { setRequestLocale } from 'next-intl/server'
+import { getPostsByLocale } from '@/lib/posts'
 
 const defaultLayout = 'PostLayout'
 const layouts = {
@@ -24,13 +26,16 @@ const layouts = {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string[] }
+  params: { locale: string; slug: string[] }
 }): Promise<Metadata | undefined> {
+  const { locale } = params
   const slug = decodeURI(params.slug.join('/'))
-  const post = allBlogs.find((p) => p.slug === slug)
+  const post = allBlogs.find((p) => p.slug === slug && p.locale === locale)
   const authorList = post?.authors || ['default']
   const authorDetails = authorList.map((author) => {
-    const authorResults = allAuthors.find((p) => p.slug === author)
+    const authorResults =
+      allAuthors.find((p) => p.slug === author && p.locale === locale) ||
+      allAuthors.find((p) => p.slug === author && p.locale === 'en')
     return coreContent(authorResults as Authors)
   })
   if (!post) {
@@ -50,6 +55,9 @@ export async function generateMetadata({
     }
   })
 
+  const enUrl = `${siteMetadata.siteUrl}/blog/${slug}`
+  const plUrl = `${siteMetadata.siteUrl}/pl/blog/${slug}`
+
   return {
     title: post.title,
     description: post.summary,
@@ -57,13 +65,17 @@ export async function generateMetadata({
       title: post.title,
       description: post.summary,
       siteName: siteMetadata.title,
-      locale: 'en_US',
+      locale: locale === 'pl' ? 'pl_PL' : 'en_US',
       type: 'article',
       publishedTime: publishedAt,
       modifiedTime: modifiedAt,
       url: './',
       images: ogImages,
       authors: authors.length > 0 ? authors : [siteMetadata.author],
+    },
+    alternates: {
+      canonical: locale === 'pl' ? plUrl : enUrl,
+      languages: { en: enUrl, pl: plUrl, 'x-default': enUrl },
     },
     twitter: {
       card: 'summary_large_image',
@@ -74,16 +86,17 @@ export async function generateMetadata({
   }
 }
 
-export const generateStaticParams = async () => {
-  const paths = allBlogs.map((p) => ({ slug: p.slug.split('/') }))
-
-  return paths
+export const generateStaticParams = async ({ params }: { params: { locale: string } }) => {
+  return allBlogs
+    .filter((p) => p.locale === params.locale)
+    .map((p) => ({ slug: p.slug.split('/') }))
 }
 
-export default async function Page({ params }: { params: { slug: string[] } }) {
+export default async function Page({ params }: { params: { locale: string; slug: string[] } }) {
+  const { locale } = params
+  setRequestLocale(locale)
   const slug = decodeURI(params.slug.join('/'))
-  // Filter out drafts in production
-  const sortedCoreContents = allCoreContent(sortPosts(allBlogs))
+  const sortedCoreContents = getPostsByLocale(locale)
   const postIndex = sortedCoreContents.findIndex((p) => p.slug === slug)
   if (postIndex === -1) {
     return notFound()
@@ -91,10 +104,12 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
 
   const prev = sortedCoreContents[postIndex + 1]
   const next = sortedCoreContents[postIndex - 1]
-  const post = allBlogs.find((p) => p.slug === slug) as Blog
+  const post = allBlogs.find((p) => p.slug === slug && p.locale === locale) as Blog
   const authorList = post?.authors || ['default']
   const authorDetails = authorList.map((author) => {
-    const authorResults = allAuthors.find((p) => p.slug === author)
+    const authorResults =
+      allAuthors.find((p) => p.slug === author && p.locale === locale) ||
+      allAuthors.find((p) => p.slug === author && p.locale === 'en')
     return coreContent(authorResults as Authors)
   })
   const mainContent = coreContent(post)

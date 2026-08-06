@@ -1,12 +1,22 @@
 import Link from '@/components/Link'
 import siteMetadata from '@/data/siteMetadata'
 import { genPageMetadata } from 'app/seo'
+import { setRequestLocale } from 'next-intl/server'
+import { Metadata } from 'next'
 
-export const metadata = genPageMetadata({
-  title: 'Hire Me',
-  description:
-    'Senior Full-Stack Engineer available for hire. Deep expertise in performance optimization, scalable architecture, and shipping production systems.',
-})
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string }
+}): Promise<Metadata> {
+  return genPageMetadata({
+    title: 'Hire Me',
+    description:
+      'Senior Full-Stack Engineer available for hire. Deep expertise in performance optimization, scalable architecture, and shipping production systems.',
+    locale: params.locale,
+    path: '/hire',
+  })
+}
 
 const skills = [
   {
@@ -48,7 +58,8 @@ const idealRoles = [
   'Open to full-time, contract, and consulting',
 ]
 
-export default function HirePage() {
+export default function HirePage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale)
   return (
     <div className="space-y-0">
       {/* -- Header -- */}

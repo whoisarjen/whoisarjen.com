@@ -1,17 +1,19 @@
 import ListLayout from '@/layouts/ListLayoutWithTags'
-import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer'
 import { allBlogs } from 'contentlayer/generated'
 import siteMetadata from '@/data/siteMetadata'
+import { getPostsByLocale } from '@/lib/posts'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
-export const generateStaticParams = async () => {
-  const totalPages = Math.ceil(allBlogs.length / siteMetadata.postsPerPage)
-  const paths = Array.from({ length: totalPages }, (_, i) => ({ page: (i + 1).toString() }))
-
-  return paths
+export const generateStaticParams = async ({ params }: { params: { locale: string } }) => {
+  const localePosts = allBlogs.filter((p) => p.locale === params.locale)
+  const totalPages = Math.max(1, Math.ceil(localePosts.length / siteMetadata.postsPerPage))
+  return Array.from({ length: totalPages }, (_, i) => ({ page: (i + 1).toString() }))
 }
 
-export default function Page({ params }: { params: { page: string } }) {
-  const posts = allCoreContent(sortPosts(allBlogs))
+export default async function Page({ params }: { params: { locale: string; page: string } }) {
+  setRequestLocale(params.locale)
+  const t = await getTranslations('blog')
+  const posts = getPostsByLocale(params.locale)
   const pageNumber = parseInt(params.page as string)
   const initialDisplayPosts = posts.slice(
     siteMetadata.postsPerPage * (pageNumber - 1),
@@ -27,7 +29,7 @@ export default function Page({ params }: { params: { page: string } }) {
       posts={posts}
       initialDisplayPosts={initialDisplayPosts}
       pagination={pagination}
-      title="All Posts"
+      title={t('allPosts')}
     />
   )
 }
