@@ -53,3 +53,5 @@ yarn-error.log*
 node_modules.root-owned
 .next.root-owned
 .contentlayer.root-owned
+/public/search-pl.json
+tsconfig.tsbuildinfo
