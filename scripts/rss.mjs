@@ -4,6 +4,7 @@ import { slug } from 'github-slugger'
 import { escape } from 'pliny/utils/htmlEscaper.js'
 import siteMetadata from '../data/siteMetadata.js'
 import tagData from '../app/tag-data.json' with { type: 'json' }
+import plMessages from '../messages/pl.json' with { type: 'json' }
 import { allBlogs } from '../.contentlayer/generated/index.mjs'
 import { sortPosts } from 'pliny/utils/contentlayer.js'
 
@@ -19,12 +20,12 @@ const generateRssItem = (config, post, localePrefix) => `
   </item>
 `
 
-const generateRss = (config, posts, page, localePrefix, language) => `
+const generateRss = (config, posts, page, localePrefix, language, description) => `
   <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
       <title>${escape(config.title)}</title>
       <link>${config.siteUrl}${localePrefix}/blog</link>
-      <description>${escape(config.description)}</description>
+      <description>${escape(description)}</description>
       <language>${language}</language>
       <managingEditor>${config.email} (${config.author})</managingEditor>
       <webMaster>${config.email} (${config.author})</webMaster>
@@ -38,6 +39,7 @@ const generateRss = (config, posts, page, localePrefix, language) => `
 async function generateRSSForLocale(config, posts, locale) {
   const localePrefix = locale === 'pl' ? '/pl' : ''
   const language = locale === 'pl' ? 'pl' : config.language
+  const description = locale === 'pl' ? plMessages.metadata.description : config.description
   const publishPosts = posts.filter((post) => post.draft !== true)
   if (publishPosts.length === 0) return
 
@@ -45,7 +47,7 @@ async function generateRSSForLocale(config, posts, locale) {
   mkdirSync(path.dirname(path.join('public', feedPath)), { recursive: true })
   writeFileSync(
     path.join('public', feedPath),
-    generateRss(config, sortPosts(publishPosts), feedPath, localePrefix, language)
+    generateRss(config, sortPosts(publishPosts), feedPath, localePrefix, language, description)
   )
 
   for (const tag of Object.keys(tagData)) {
@@ -58,7 +60,7 @@ async function generateRSSForLocale(config, posts, locale) {
     mkdirSync(path.dirname(path.join('public', tagFeedPath)), { recursive: true })
     writeFileSync(
       path.join('public', tagFeedPath),
-      generateRss(config, filteredPosts, tagFeedPath, localePrefix, language)
+      generateRss(config, filteredPosts, tagFeedPath, localePrefix, language, description)
     )
   }
 }

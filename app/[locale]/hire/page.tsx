@@ -36,7 +36,7 @@ export default function HirePage({ params }: { params: { locale: string } }) {
     { value: '+80%', label: t('metric3') },
     { value: '13', label: t('metric4') },
     { value: '15+', label: t('metric5') },
-    { value: '26', label: t('metric6') },
+    { value: '35', label: t('metric6') },
   ]
 
   const idealRoles = [t('role1'), t('role2'), t('role3'), t('role4'), t('role5')]

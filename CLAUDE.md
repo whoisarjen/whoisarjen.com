@@ -35,6 +35,7 @@ Blog posts are MDX files in `data/blog/`. Framework: Next.js 14 + Contentlayer2.
 
 **1. YAML Apostrophes in Single Quotes (SILENT FAILURE)**
 Contentlayer silently skips files with YAML parse errors — no build failure, post just disappears.
+
 ```yaml
 # WRONG — apostrophe breaks single-quoted YAML string
 title: 'Why Your Server Shouldn't Touch the Bytes'
@@ -45,15 +46,19 @@ title: "Why Your Server Shouldn't Touch the Bytes"
 
 **2. Angle Brackets Outside Code Blocks**
 MDX parses `<` as JSX tag start → build error. `>` can also cause issues.
+
 ```markdown
 # WRONG — MDX treats <1KB as a JSX tag
+
 - Responses are tiny (<1KB)
 - Responses are large (>10KB)
 
 # CORRECT — use words instead
+
 - Responses are tiny (under 1KB)
 - Responses are large (over 10KB)
 ```
+
 Angle brackets inside code blocks (```) and inline code (`) are fine.
 
 **3. Curly Braces Outside Code Blocks**
@@ -63,17 +68,19 @@ Angle brackets inside code blocks (```) and inline code (`) are fine.
 Posts with future dates may not appear on the blog listing. Use yesterday or today in UTC.
 
 ### Frontmatter Format
+
 ```yaml
 ---
-title: "Title Here (use double quotes if apostrophes present)"
+title: 'Title Here (use double quotes if apostrophes present)'
 date: 2026-03-11T12:00:00Z
-lastmod: '2026-03-11'              # Optional
+lastmod: '2026-03-11' # Optional
 summary: 'One sentence summary of the post'
-tags: ['Tag1', 'Tag2', 'Tag3']     # 5-7 tags
+tags: ['Tag1', 'Tag2', 'Tag3'] # 5-7 tags
 ---
 ```
 
 ### Writing Style
+
 - **Tone**: First-person technical narrative ("We ran this pattern", "I chose optimization")
 - **Structure**: Problem → Root cause → Solution → Implementation → Results/Impact
 - **Length**: 2,000-4,000 words
@@ -86,6 +93,7 @@ tags: ['Tag1', 'Tag2', 'Tag3']     # 5-7 tags
 - **End**: With a memorable one-liner conclusion
 
 ### Before Pushing Blog Posts
+
 1. Check for apostrophes in single-quoted YAML values → switch to double quotes
 2. Check for `<` `>` `{` `}` outside code blocks → use words or code blocks
 3. Ensure date is not in the future (UTC)
@@ -98,17 +106,20 @@ The site is bilingual: EN at root URLs (default, x-default), PL under `/pl`. Rou
 `messages/en.json` + `messages/pl.json` — every new UI string goes into BOTH files.
 
 ### Blog post rules (enforced by a production build gate)
+
 - Every EN post `data/blog/<name>.mdx` MUST have a PL twin `data/blog/pl/<name>.mdx`
   (same filename, same slug). `yarn build` FAILS otherwise — no EN-only publishing.
 - PL frontmatter: `title`/`summary` translated; `date`, `lastmod`, `tags` copied exactly.
   Tags stay English in both languages (shared taxonomy).
-- Code blocks and inline code must be BYTE-IDENTICAL between EN and PL (gate-enforced).
+- Fenced code blocks must be BYTE-IDENTICAL between EN and PL (build-gate-enforced).
+  Inline code should match too (checker/review convention, not gate-enforced).
   Editing a code block in one language means editing both files.
 - Translation register: see `scripts/translation-style-guide.md`.
 - Quick check without a build: `node scripts/check-i18n-parity.mjs` (`--strict` for launch parity).
 - All MDX pitfalls above apply to PL files too.
 
 ### Other i18n rules
+
 - New projects in `data/projectsData.ts` need a `descriptionPl` override.
 - New routes go under `app/[locale]/` with `setRequestLocale(params.locale)` and
   `genPageMetadata({ locale, path })` for hreflang.

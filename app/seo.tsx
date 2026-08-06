@@ -29,7 +29,7 @@ export function genPageMetadata({
     ...(description ? { description } : {}),
     openGraph: {
       title: `${title} | ${siteMetadata.title}`,
-      description: description || siteMetadata.description,
+      ...(description ? { description } : {}),
       url: './',
       siteName: siteMetadata.title,
       images: image ? [image] : [siteMetadata.socialBanner],
